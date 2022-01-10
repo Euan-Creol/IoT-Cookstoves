@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useContractReader } from "eth-hooks";
 import { ethers } from "ethers";
+import {Divider} from "antd";
 
 /**
  * web3 props can be passed from '../App.jsx' into your local view component for use
@@ -18,50 +19,16 @@ function Home({ yourLocalBalance, readContracts }) {
     <div>
       <div style={{ margin: 32 }}>
         <span style={{ marginRight: 8 }}>📝</span>
-        This Is Your App Home. You can start editing it in{" "}
-        <span
-          className="highlight"
-          style={{ marginLeft: 4, /* backgroundColor: "#f9f9f9", */ padding: 4, borderRadius: 4, fontWeight: "bolder" }}
-        >
-          packages/react-app/views/Home.jsx
-        </span>
+        A prototype app for project developers and verifiers to approve and mint tonnage
       </div>
-      <div style={{ margin: 32 }}>
-        <span style={{ marginRight: 8 }}>🤓</span>
-        The "purpose" variable from our contract is{" "}
-        <span
-          className="highlight"
-          style={{ marginLeft: 4, /* backgroundColor: "#f9f9f9", */ padding: 4, borderRadius: 4, fontWeight: "bolder" }}
-        >
-          {purpose}
-        </span>
-      </div>
-      <div style={{ margin: 32 }}>
-        <span style={{ marginRight: 8 }}>🤖</span>
-        An example prop of your balance{" "}
-        <span style={{ fontWeight: "bold", color: "green" }}>({ethers.utils.formatEther(yourLocalBalance)})</span> was
-        passed into the
-        <span
-          className="highlight"
-          style={{ marginLeft: 4, /* backgroundColor: "#f9f9f9", */ padding: 4, borderRadius: 4, fontWeight: "bolder" }}
-        >
-          Home.jsx
-        </span>{" "}
-        component from
-        <span
-          className="highlight"
-          style={{ marginLeft: 4, /* backgroundColor: "#f9f9f9", */ padding: 4, borderRadius: 4, fontWeight: "bolder" }}
-        >
-          App.jsx
-        </span>
-      </div>
-      <div style={{ margin: 32 }}>
-        <span style={{ marginRight: 8 }}>💭</span>
-        Check out the <Link to="/hints">"Hints"</Link> tab for more tips.
-      </div>
-      <div style={{ margin: 32 }}>
-        <span style={{ marginRight: 8 }}>🛠</span>
-        Tinker with your smart contract using the <Link to="/debug">"Debug Contract"</Link> tab.
+      <Divider/>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
+        <div style={{ margin: 32 }}>
+          Access to the Verifier portal <Link to="/verify">"Verifier"</Link>
+        </div>
+        <div style={{ margin: 32 }}>
+          Access to the Project Developer portal <Link to="/mint">"Mint"</Link>
+        </div>
       </div>
     </div>
   );
