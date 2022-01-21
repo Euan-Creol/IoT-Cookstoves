@@ -24,11 +24,18 @@ function Home({ yourLocalBalance, readContracts }) {
       <Divider/>
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
         <div style={{ margin: 32 }}>
-          Access to the Verifier portal <Link to="/verify">"Verifier"</Link>
+          <h2>
+            Access to the <Link to="/verify">Verifier Portal</Link>
+          </h2>
         </div>
         <div style={{ margin: 32 }}>
-          Access to the Project Developer portal <Link to="/mint">"Mint"</Link>
+          <h2>
+            Access to the <Link to="/mint">Project Developer Portal</Link>
+          </h2>
         </div>
+      </div>
+      <div style={{ margin: 16}}>
+        Read our <Link to="/faq">FAQs</Link>
       </div>
     </div>
   );

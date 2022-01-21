@@ -64,7 +64,15 @@ export default function Verify({
   }
 
   function enableDataSubmit() {
-    if (newAddress !== null && newAmount !== null && newMessage !== null) {
+  if (newAddress !== null
+    && newAmount !== null
+    && newFile !== null
+    && newMethodology !== null
+    && newStoveID !== null
+    && newStoveGroupID !== null
+    && newBurnTime !== null
+    && newEmissionFactor !== null
+    && newArweaveLink !== null) {
       return false
     } else {
       return true
@@ -80,10 +88,8 @@ export default function Verify({
     workbook.SheetNames.forEach(function(sheetName) {
       // Here is your object
       let XL_row_object = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
-      console.log(XL_row_object)
       let json_object = JSON.stringify(XL_row_object);
-      setNewMessage(json_object)
-      console.log(json_object)
+      setNewFile(json_object)
     })
     // You can set content in state and show it in render.
   }
@@ -206,13 +212,18 @@ export default function Verify({
   const { Text } = Typography;
 
   const [newMessage, setNewMessage] = useState(null);
+  const [newFile, setNewFile] = useState(null);
   const [newAddress, setNewAddress] = useState(null);
   const [newAmount, setNewAmount] = useState(null);
   const [newNonce, setNewNonce] = useState(null);
   const [newMethodology, setNewMethodology] = useState(null);
   const [newMessageHash, setNewMessageHash] = useState(null);
-  const [newFullSignature, setNewFullSignature] =useState('')
-  const [newVerifyResult, setNewVerifyResult] = useState('...')
+  const [newFullSignature, setNewFullSignature] = useState('');
+  const [newStoveID, setNewStoveID] = useState(null);
+  const [newStoveGroupID, setNewStoveGroupID] = useState(null);
+  const [newBurnTime, setNewBurnTime] = useState(null);
+  const [newEmissionFactor, setNewEmissionFactor] = useState(null);
+  const [newArweaveLink, setNewArweaveLink] = useState(null);
 
   return (
     <div>
@@ -231,7 +242,7 @@ export default function Verify({
           />
         </div>
       </div>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
         <div style={{ margin: 8 }}>
           <Row>
             <Col span={22}>
@@ -274,8 +285,33 @@ export default function Verify({
           </Row>
           <Divider />
           <Row>
+            <Col span={10}>
+              <h2>Stove Group ID</h2>
+              <Input
+                style={{marginRight:10}}
+                onChange={e => {
+                  setNewStoveGroupID(e.target.value);
+                }}
+              />
+            </Col>
+            <Col span={1}/>
+            <Col span={10}>
+              <h2>Stove ID</h2>
+              <Input
+                onChange={e => {
+                  setNewStoveID(e.target.value);
+                }}
+              />
+            </Col>
+            <Col span={1}/>
+            <Col span={2}>
+              {displayIcon(newStoveGroupID && newStoveID)}
+            </Col>
+          </Row>
+          <Divider />
+          <Row>
             <Col span={22}>
-              <h2>Number of Tonnes</h2>
+              <h2>Amount of Carbon (grams CO2e)</h2>
               <Input
                 onChange={e => {
                   setNewAmount(e.target.value);
@@ -289,61 +325,104 @@ export default function Verify({
           <Divider />
           <Row>
             <Col span={22}>
-              <h2>Stove/Fuel Data</h2>
+              <h2>Emission factor</h2>
+              <Input
+                onChange={e => {
+                  setNewEmissionFactor(e.target.value);
+                }}
+              />
+            </Col>
+            <Col span={2}>
+              {displayIcon(newEmissionFactor)}
+            </Col>
+          </Row>
+          <Divider />
+          <Row>
+            <Col span={22}>
+              <h2>Burn Time</h2>
+              <Input
+                onChange={e => {
+                  setNewBurnTime(e.target.value);
+                }}
+              />
+            </Col>
+            <Col span={2}>
+              {displayIcon(newBurnTime)}
+            </Col>
+          </Row>
+          <Divider />
+          <Row>
+            <Col span={22}>
+              <h2>Batch Data</h2>
               <input type="file" accept=".xlsx" onChange={e =>
                 handleChangeFile(e.target.files[0])} />
+              <Input
+                onChange={e => {
+                  setNewFile(e.target.value);
+                }}
+              />
             </Col>
             <Col span={2}>
               {displayIcon(newMessage)}
             </Col>
           </Row>
           <Divider />
-          <Button
-            disabled={enableDataSubmit()}
-            onClick={async () => {
-              const newNonce = 1;
-              setNewNonce(newNonce)
-              //Hash the message
-              const result = tx(writeContracts.Verifier.getMessageHash(newAddress, parseInt(newAmount), newMessage, parseInt(newNonce)));
-              setNewMessageHash(await result)
-              result.then((messageHash) => {
-                //Sign the message hash
-                let signPromise = userSigner.signMessage(arrayify(messageHash))
-                signPromise.then((signature) => {
-                  setNewFullSignature(signature)})
-              })
-            }}
-          >
-            Sign data
-          </Button>
-          <div>
-            <Text copyable={{ text: newFullSignature }}>
-              <a
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {newFullSignature.slice(0,5) + '...' + newFullSignature.slice((newFullSignature.length)-5,newFullSignature.length)}
-              </a>
-            </Text>
+          <Row>
+            <Col span={22}>
+              <h2>Arweave Link</h2>
+              <Input
+                onChange={e => {
+                  setNewArweaveLink(e.target.value);
+                }}
+              />
+            </Col>
+            <Col span={2}>
+              {displayIcon(newArweaveLink)}
+            </Col>
+          </Row>
+          <Row>
+            <Col span={22}>
+              <div>
+                How to upload to Arweave >
+              </div>
+            </Col>
+            <Col span={2}/>
+          </Row>
+          <Divider />
+          <div style={{textAlign: "center"}}>
+            <Button
+              disabled={enableDataSubmit()}
+              onClick={async () => {
+                const newMessage = newMethodology + newStoveGroupID + newStoveID + newBurnTime + newEmissionFactor + newFile;
+                const newNonce = 1;
+                setNewMessage(newMessage)
+                setNewNonce(newNonce)
+                //Hash the message
+                const result = tx(writeContracts.Verifier.getMessageHash(newAddress, parseInt(newAmount), newMessage, parseInt(newNonce)));
+                setNewMessageHash(await result)
+                result.then((messageHash) => {
+                  //Sign the message hash
+                  let signPromise = userSigner.signMessage(arrayify(messageHash))
+                  signPromise.then((signature) => {
+                    setNewFullSignature(signature)})
+                })
+              }}
+            >
+              Sign data
+            </Button>
+            <div>
+              <Text copyable={{ text: newFullSignature }}>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {newFullSignature.slice(0,5) + '...' + newFullSignature.slice((newFullSignature.length)-5,newFullSignature.length)}
+                </a>
+              </Text>
+            </div>
           </div>
         </div>
       </div>
-      <div style={{ border: "1px solid #dddddd", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-        <h2>
-          Submit proof to Arweave
-        </h2>
-        <Button>
-          Submit proof
-        </Button>
-      </div>
-      <Events
-        contracts={readContracts}
-        contractName="Verifier"
-        eventName="dataHashed"
-        localProvider={localProvider}
-        mainnetProvider={mainnetProvider}
-        startBlock={1}
-      />
     </div>
   )
 }

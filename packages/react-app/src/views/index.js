@@ -4,3 +4,5 @@ export { default as Hints } from "./Hints";
 export { default as Subgraph } from "./Subgraph";
 export { default as Verify } from "./Verify"
 export { default as Mint } from "./Mint"
+export { default as FAQs } from "./Faq"
+export { default as Register } from "./Register"

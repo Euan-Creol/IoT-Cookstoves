@@ -29,7 +29,7 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph, Verify, Mint } from "./views";
+import { Home, ExampleUI, Hints, Subgraph, Verify, Mint, FAQs, Register } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
@@ -255,7 +255,10 @@ function App(props) {
       />
       <Menu style={{ textAlign: "center" }} selectedKeys={[location.pathname]} mode="horizontal">
         <Menu.Item key="/">
-          <Link to="/">App Home</Link>
+          <Link to="/">Home</Link>
+        </Menu.Item>
+        <Menu.Item key="/register">
+          <Link to="/register">Register</Link>
         </Menu.Item>
         <Menu.Item key="/verify">
           <Link to="/verify">Verify</Link>
@@ -367,6 +370,23 @@ function App(props) {
             data={data}
           />
         </Route>
+        <Route path="/register">
+          <Register
+            address={address}
+            userSigner={userSigner}
+            mainnetProvider={mainnetProvider}
+            localProvider={localProvider}
+            yourLocalBalance={yourLocalBalance}
+            price={price}
+            tx={tx}
+            writeContracts={writeContracts}
+            readContracts={readContracts}
+            data={data}
+          />
+        </Route>
+        <Route path="/faq">
+          <FAQs/>
+        </Route>
       </Switch>
 
       <ThemeSwitch />
@@ -409,7 +429,7 @@ function App(props) {
           <Col span={8} style={{ textAlign: "center", opacity: 1 }}>
             <Button
               onClick={() => {
-                window.open("https://t.me/joinchat/KByvmRe5wkR-8F_zz6AjpA");
+                window.open('/faq');
               }}
               size="large"
               shape="round"
@@ -417,7 +437,7 @@ function App(props) {
               <span style={{ marginRight: 8 }} role="img" aria-label="support">
                 💬
               </span>
-              Support
+              FAQs
             </Button>
           </Col>
         </Row>
