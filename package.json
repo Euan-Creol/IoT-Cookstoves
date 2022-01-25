@@ -72,6 +72,7 @@
     "@openzeppelin/contracts-upgradeable": "^4.4.2",
     "fs": "^0.0.1-security",
     "keccak256": "^1.0.6",
+    "openzeppelin-solidity": "^4.4.2",
     "react-json-to-table": "^0.1.7",
     "read-excel-file": "^5.2.25",
     "xlsx": "^0.17.4"

@@ -29,7 +29,7 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph, Verify, Mint, FAQs, Register } from "./views";
+import { Home, ExampleUI, Hints, Subgraph, Verify, Mint, FAQs, Register, Admin } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
@@ -257,6 +257,9 @@ function App(props) {
         <Menu.Item key="/">
           <Link to="/">Home</Link>
         </Menu.Item>
+        <Menu.Item key="/admin">
+          <Link to="/admin">Admin</Link>
+        </Menu.Item>
         <Menu.Item key="/register">
           <Link to="/register">Register</Link>
         </Menu.Item>
@@ -372,6 +375,20 @@ function App(props) {
         </Route>
         <Route path="/register">
           <Register
+            address={address}
+            userSigner={userSigner}
+            mainnetProvider={mainnetProvider}
+            localProvider={localProvider}
+            yourLocalBalance={yourLocalBalance}
+            price={price}
+            tx={tx}
+            writeContracts={writeContracts}
+            readContracts={readContracts}
+            data={data}
+          />
+        </Route>
+        <Route path="/admin">
+          <Admin
             address={address}
             userSigner={userSigner}
             mainnetProvider={mainnetProvider}

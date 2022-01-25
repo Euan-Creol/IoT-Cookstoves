@@ -16155,6 +16155,11 @@
     "is-docker" "^2.0.0"
     "is-wsl" "^2.1.1"
 
+"openzeppelin-solidity@^4.4.2":
+  "integrity" "sha512-hwUZJ5HFWpSed9Toky8XVEPmKbRB7V/P+PwH6q/h9wyIzfYy3QM6qoj+XQv7GgM3UnjJzSsc/FP9XZlcMBQU1A=="
+  "resolved" "https://registry.npmjs.org/openzeppelin-solidity/-/openzeppelin-solidity-4.4.2.tgz"
+  "version" "4.4.2"
+
 "opn@^5.5.0":
   "integrity" "sha512-PqHpggC9bLV0VeWcdKhkpxY+3JTzetLSqTCWL/z/tFIbI6G8JCjondXklT1JinczLz2Xib62sSp0T/gKT4KksA=="
   "resolved" "https://registry.npmjs.org/opn/-/opn-5.5.0.tgz"

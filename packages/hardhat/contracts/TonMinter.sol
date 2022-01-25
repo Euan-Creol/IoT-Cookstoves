@@ -32,6 +32,7 @@ pragma abicoder v2;
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 
 import "./CarbonVCUInterface.sol";
 import "hardhat/console.sol";
@@ -50,7 +51,7 @@ import "hardhat/console.sol";
  * @notice Prototype Contract that accepts signed proofs of a IoT Cookstove and mints an NFT ton when it hits 1000kg
  *
  */
-contract TonMinter is Initializable, OwnableUpgradeable {
+contract TonMinter is Initializable, AccessControlUpgradeable {
 
     /**
      *
@@ -63,8 +64,8 @@ contract TonMinter is Initializable, OwnableUpgradeable {
      *
      *
      */
-    event newProofSubmitted(uint256 stoveID, uint256 burnTime, uint256 emssionFactor, uint256 gramsCO2e, uint256 stoveGroupID);
-    event newPendingCO2eGrams(uint256 pendingCO2eGrams, uint256 stoveGroupID);
+    event newProofSubmitted(uint256 stoveID, uint256 burnTime, uint256 emssionFactor, uint256 gramsCO2e, address projectDeveloperAddress);
+    event newPendingCO2eGrams(uint256 pendingCO2eGrams, address projectDeveloperAddress);
     event newStoveID(uint256 stoveID);
     event stoveIDRemoved(uint256 stoveID);
     event newStoveIPFSURI(string stoveURI);
@@ -87,6 +88,8 @@ contract TonMinter is Initializable, OwnableUpgradeable {
 
     using SafeMathUpgradeable for uint256;
 
+    bytes32 public constant PROJECT_DEVELOPER_ROLE = keccak256("PROJECT_DEVELOPER_ROLE");
+
     address public creolSuper;
     address public CVCUAddress;
 
@@ -98,26 +101,37 @@ contract TonMinter is Initializable, OwnableUpgradeable {
 
     uint256 public pendingCO2eGrams;
 
+
+    struct projectDeveloperInfo {
+        uint256 pendingCO2eGrams;
+        mapping (uint256 => stoveProofs) stoveUUIDtoStoveProof;
+        mapping (uint256 => bool) isValidStoveID;
+    }
+
     struct stoveProof {
         uint256 burnTime;
         uint256 emissionFactor;
         uint256 gramsCO2e;
-        uint256 stoveGroupID;
     }
 
+    
     struct stoveProofs {
         stoveProof[] proofCollection;
     }
+
+    /*
 
     struct stoveGroupProofs {
         uint256 pendingCO2eGrams;
     }
 
     mapping (uint256 => stoveGroupProofs) private stoveGroupIDtoPendingCO2eGrams;
+    */
 
-    mapping (uint256 => stoveProofs) private UUIDtoStoveProofs;
-    mapping (uint256 => bool) public isValidStoveID;
-
+    mapping (address => projectDeveloperInfo) public addressToProjectDevInfo;
+    //mapping (uint256 => stoveProofs) public stoveUUIDtoStoveProof;
+    //mapping (uint256 => bool) public isValidStoveID;
+    mapping (address => bool) public isValidVerifier;
     mapping (bytes => bool) public isSubmittedBatch;
 
 
@@ -129,8 +143,13 @@ contract TonMinter is Initializable, OwnableUpgradeable {
         | |  | | (_) | (_| | | | | |  __/ |  \__ \
         |_|  |_|\___/ \__,_|_|_| |_|\___|_|  |___/
     */
-    modifier onlyCreolSuper(){
-        require(msg.sender == creolSuper, "Not Creol Super");
+    modifier onlyAdmin() {
+    require(isAdmin(msg.sender), "Restricted to admins.");
+    _;
+  }
+
+    modifier onlyProjectDeveloper() {
+        require(isProjectDeveloper(msg.sender), "Restricted to project developers");
         _;
     }
 
@@ -148,14 +167,72 @@ contract TonMinter is Initializable, OwnableUpgradeable {
 
 
      constructor () {
-
+         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+         _setRoleAdmin(PROJECT_DEVELOPER_ROLE, DEFAULT_ADMIN_ROLE);
      }
 
-     function initalizeTonMinter (address _creolSuper)  public initializer {
-
-         OwnableUpgradeable.__Ownable_init();
-         creolSuper = _creolSuper;
+     function isAdmin(address account) public virtual view returns (bool) {
+         return hasRole(DEFAULT_ADMIN_ROLE, account);
      }
+
+     function isProjectDeveloper(address account) public virtual view returns (bool) {
+         return hasRole(PROJECT_DEVELOPER_ROLE, account);
+     }
+
+     function addProjectDeveloper(address account) public virtual onlyAdmin {
+         grantRole(PROJECT_DEVELOPER_ROLE, account);
+         addressToProjectDevInfo[account];
+     }
+
+     function removeProjectDeveloper(address account) public virtual onlyAdmin {
+         revokeRole(PROJECT_DEVELOPER_ROLE, account);
+     }
+
+
+    function addValidVerifier(address verifierAddress) public onlyAdmin {
+        isValidVerifier[verifierAddress] = true;
+    }
+
+    function removeValidVerifier(address verifierAddress) public onlyAdmin {
+        isValidVerifier[verifierAddress] = false;
+    }
+
+
+         /**
+      * @dev add an approved stoveID to the contract
+      * @param stoveID Unique stoveID number
+      */
+     function addStoveID (uint256 stoveID) public onlyProjectDeveloper {
+         require(addressToProjectDevInfo[msg.sender].isValidStoveID[stoveID] == false, "Stove ID is already registered");
+         addressToProjectDevInfo[msg.sender].isValidStoveID[stoveID] = true;
+         emit newStoveID(stoveID);
+     }
+     /**
+      * @dev remove an approved stoveID to the contract
+      * @param stoveID Unique stoveID number
+      */
+     function removeStoveID(uint256 stoveID) public onlyProjectDeveloper {
+         require(addressToProjectDevInfo[msg.sender].isValidStoveID[stoveID] == true, "Stove ID is not currently registered");
+         addressToProjectDevInfo[msg.sender].isValidStoveID[stoveID] = false;
+         emit newStoveID(stoveID);
+     }
+
+     /**
+      * @dev Returns the stove proofs for a given stoveID
+      * @param stoveID Stove ID to query
+      */
+     function getProofs(address projectDeveloperAddress, uint256 stoveID) public view returns (stoveProof[] memory _stoveProofs) {
+         return addressToProjectDevInfo[projectDeveloperAddress].stoveUUIDtoStoveProof[stoveID].proofCollection;
+
+     }
+          /**
+      * @dev Returns the pending CO2e grams for a given address
+      * @param projectDeveloperAddress Address belonging to a project developer
+      */
+     function getDeveloperPendingGrams(address projectDeveloperAddress) public view returns (uint256 _pendingC02eGrams) {
+         return addressToProjectDevInfo[projectDeveloperAddress].pendingCO2eGrams;
+     }
+
 
     function setDataHash(bytes32 _messageHash) public pure returns (bytes32) {
         return
@@ -239,115 +316,73 @@ contract TonMinter is Initializable, OwnableUpgradeable {
       * @param _burnTime Burntime of the stove in seconds
       * @param _emissionFactor Emission Factor used for the calculation
       * @param _gramsCO2e Total Grams calculated for emission reduction
-      * @param _stoveGroupID GroupID of stoves
       */
 
      function submitCarbonProof (
          uint256 stoveID,
          uint256 _burnTime,
          uint256 _emissionFactor,
-         uint256 _stoveGroupID,
          address _signer,
          address _to,
          uint256 _gramsCO2e,
          string memory _message,
          uint _nonce,
-         bytes memory signature) public {
+         bytes memory signature) public onlyProjectDeveloper {
 
-         bool verifyState = verify(_signer, _to, _gramsCO2e, _message, _nonce, signature);
-         require(verifyState == true, "Not verified to mint");
-
-         require(isSubmittedBatch[signature] == false);
-         require( isValidStoveID[stoveID], "Not a valid stoveID");
+         require(isSubmittedBatch[signature] == false, "This batch has already been submitted");
+         require(isValidVerifier[_signer] == true, "Not a valid verifier");
+         require(addressToProjectDevInfo[msg.sender].isValidStoveID[stoveID] == true, "Not a valid stoveID");
          require( _gramsCO2e > 0, "gramsCO2e cannot be 0");
          require( _burnTime > 0, "Burn time cannot be 0");
          require( _emissionFactor > 0, "emissionFactor cannot be 0");
+
+         bool verifyState = verify(_signer, _to, _gramsCO2e, _message, _nonce, signature);
+         require(verifyState == true, "Not verified to mint");
 
          stoveProof memory _toBeAddedProof;
          _toBeAddedProof.burnTime = _burnTime;
          _toBeAddedProof.emissionFactor = _emissionFactor;
          _toBeAddedProof.gramsCO2e = _gramsCO2e;
-         _toBeAddedProof.stoveGroupID = _stoveGroupID;
 
-         UUIDtoStoveProofs[stoveID].proofCollection.push(_toBeAddedProof);
+         addressToProjectDevInfo[msg.sender].stoveUUIDtoStoveProof[stoveID].proofCollection.push(_toBeAddedProof);
 
          isSubmittedBatch[signature] = true;
 
-         emit newProofSubmitted(stoveID,_burnTime, _emissionFactor, _gramsCO2e, _stoveGroupID);
+         emit newProofSubmitted(stoveID,_burnTime, _emissionFactor, _gramsCO2e, msg.sender);
 
-         stoveGroupIDtoPendingCO2eGrams[_stoveGroupID].pendingCO2eGrams = stoveGroupIDtoPendingCO2eGrams[_stoveGroupID].pendingCO2eGrams.add(_gramsCO2e);
+         addressToProjectDevInfo[msg.sender].pendingCO2eGrams = addressToProjectDevInfo[msg.sender].pendingCO2eGrams.add(_gramsCO2e);
 
-         emit newPendingCO2eGrams(stoveGroupIDtoPendingCO2eGrams[_stoveGroupID].pendingCO2eGrams, _stoveGroupID);
+         emit newPendingCO2eGrams(addressToProjectDevInfo[msg.sender].pendingCO2eGrams, msg.sender);
 
      }
 
     /**
       * @dev Allows caller to mint CVCUs when there is a threshold amount of CO2e in the contract, they are minted to the defined creolSuper address
       */
-     function mintCVCU(uint256 _stoveGroupID) public  {
+     function mintCVCU(uint256 _stoveGroupID) public onlyProjectDeveloper {
 
-         require(stoveGroupIDtoPendingCO2eGrams[_stoveGroupID].pendingCO2eGrams > 1000000, "Not enough pendingCO2eGrams for 1 ton CO2e");
+         require(addressToProjectDevInfo[msg.sender].pendingCO2eGrams > 1000000, "Not enough pendingCO2eGrams for 1 ton CO2e");
          require(address(CVCUAddress) != address(0x0));
 
          CVCUInterface.mintVCU(creolSuper, cookstoveIPFSURI);
 
-         stoveGroupIDtoPendingCO2eGrams[_stoveGroupID].pendingCO2eGrams = stoveGroupIDtoPendingCO2eGrams[_stoveGroupID].pendingCO2eGrams.sub(1000000);
+         addressToProjectDevInfo[msg.sender].pendingCO2eGrams = addressToProjectDevInfo[msg.sender].pendingCO2eGrams.sub(1000000);
 
-         emit newPendingCO2eGrams(stoveGroupIDtoPendingCO2eGrams[_stoveGroupID].pendingCO2eGrams, _stoveGroupID);
-
-
+         emit newPendingCO2eGrams(addressToProjectDevInfo[msg.sender].pendingCO2eGrams, msg.sender);
      }
 
 
-     /**
-      * @dev Returns the stove proofs for a given stoveID
-      * @param stoveID Stove ID to query
-      */
-     function getProofs(uint256 stoveID) public view returns (stoveProof[] memory _stoveProofs) {
-
-         return UUIDtoStoveProofs[stoveID].proofCollection;
-
-     }
-          /**
-      * @dev Returns the stove group proofs for a given stoveID
-      * @param GroupID Group ID to query
-      */
-     function getGroupProofsPendingGrams(uint256 GroupID) public view returns (uint256 _pendingC02eGrams) {
-
-         return stoveGroupIDtoPendingCO2eGrams[GroupID].pendingCO2eGrams;
-
-     }
-     /**
-      * @dev add an approved stoveID to the contract
-      * @param stoveID Unique stoveID number
-      */
-     function addStoveID (uint256 stoveID) public {
-
-         isValidStoveID[stoveID] = true;
-         emit newStoveID(stoveID);
-     }
-     /**
-      * @dev remove an approved stoveID to the contract
-      * @param stoveID Unique stoveID number
-      */
-     function removeStoveID(uint256 stoveID) public onlyCreolSuper {
-
-         isValidStoveID[stoveID] = false;
-         emit stoveIDRemoved(stoveID);
-     }
-     function setStoveURI(string memory _stoveURI) public onlyCreolSuper {
+     function setStoveURI(string memory _stoveURI) public onlyProjectDeveloper {
 
          cookstoveIPFSURI = _stoveURI;
          emit newStoveIPFSURI(cookstoveIPFSURI);
      }
-      function setTonMinterCVCU(address _CVCU) public onlyCreolSuper {
+      function setTonMinterCVCU(address _CVCU) public onlyAdmin {
 
          CVCUAddress = _CVCU;
          CVCUInterface = CarbonVCUInterface(_CVCU);
          emit newTonMinterCVCU(_CVCU);
      }
-
-
 
 
 /**
