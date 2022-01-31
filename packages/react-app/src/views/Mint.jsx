@@ -29,6 +29,14 @@ export default function Mint({
   const ECSWallet = '0x55C9354F716188d3C937FC3C1569685B740bC8e3' //Wallet.createRandom()
   const ACEWallet = '0xB6FA19268D9bc22d1f92574505a5fac7622252Db' //Wallet.createRandom()
 
+  const onClickProjectMethodology = ({ key }) => {
+    setNewProjectMethodology(key)
+    const result = tx(writeContracts.TonMinter.getDeveloperPendingTons(address))
+    result.then((tons) => {
+      setNewPendingTons(tons.toNumber())
+    })
+  };
+
   const onClickMethodology = ({ key }) => {
     setNewMethodology(key)
   };
@@ -40,6 +48,14 @@ export default function Mint({
       </Menu.Item>
       <Menu.Item key={ACEWallet}>
         ACE
+      </Menu.Item>
+    </Menu>
+  );
+
+  const projectMethodologyDropdown = (
+    <Menu onClick={onClickProjectMethodology}>
+      <Menu.Item key={"GS-Cookstoves"}>
+        Gold Standard - METHODOLOGY FOR METERED & MEASURED ENERGY COOKING DEVICES
       </Menu.Item>
     </Menu>
   );
@@ -71,7 +87,6 @@ export default function Mint({
       && newFile !== null
       && newMethodology !== null
       && newStoveID !== null
-      && newStoveGroupID !== null
       && newBurnTime !== null
       && newEmissionFactor !== null
       && newArweaveLink !== null
@@ -112,15 +127,17 @@ export default function Mint({
   const [newSignature, setNewSignature] = useState(null);
   const [newFullSignature, setNewFullSignature] = useState(null);
   const [newVerifyResult, setNewVerifyResult] = useState('...');
+  const [newProjectMethodology, setNewProjectMethodology] = useState(null);
   const [newMethodology, setNewMethodology] = useState(null);
   const [newMessageHash, setNewMessageHash] = useState(null);
   const [newStoveID, setNewStoveID] = useState(null);
-  const [newValidStoveID, setNewValidStoveID] = useState(false)
-  const [newStoveGroupID, setNewStoveGroupID] = useState(null);
+  const [newValidStoveID, setNewValidStoveID] = useState(false);
   const [newBurnTime, setNewBurnTime] = useState(null);
   const [newEmissionFactor, setNewEmissionFactor] = useState(null);
   const [newArweaveLink, setNewArweaveLink] = useState(null);
   const [newApproveMint, setNewApproveMint] = useState(true);
+  const [newPendingTons, setNewPendingTons] = useState(0);
+  const [newTonsToMint, setNewTonsToMint] = useState(null);
 
   return (
     <div>
@@ -137,6 +154,9 @@ export default function Mint({
             ensProvider={mainnetProvider}
             fontSize={16}
           />
+        </div>
+        <div>
+          Pending CO2e: {newPendingTons} Tons
         </div>
       </div>
       <div style={{ border: "1px solid #2faf49", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
@@ -162,44 +182,26 @@ export default function Mint({
           </Row>
           <Divider />
           <Row>
-            <Col span={10}>
-              <h2>Stove Group ID</h2>
-              <Input
-                style={{marginRight:10}}
-                onChange={e => {
-                  setNewStoveGroupID(parseInt(e.target.value))
-                }}
-              />
+            <Col span={22}>
+              <Space direction="vertical">
+                <Space wrap>
+                  <Dropdown overlay={projectMethodologyDropdown} click placement="bottomCenter" >
+                    <h2>
+                      <a className="ant-dropdown-link" style={{ color: '#cccccc' }} onClick={e => e.preventDefault()}>
+                        Project Methodology <DownOutlined />
+                      </a>
+                    </h2>
+                  </Dropdown>
+                </Space>
+              </Space>
+              <h4>{newProjectMethodology}</h4>
             </Col>
-            <Col span={1}/>
-            <Col span={10}>
-              <h2>Stove ID</h2>
-              <Input
-                onChange={e => {
-                  const stoveID = parseInt(e.target.value)
-                  setNewStoveID(stoveID)
-                  if(!isNaN(stoveID)) {
-                    const result = tx(readContracts.TonMinter.isValidStoveID(stoveID))
-                    result.then((stoveIDResult) => {
-                      console.log(stoveIDResult)
-                      setNewValidStoveID(stoveIDResult)
-                    })
-                  } else {
-                    setNewValidStoveID(false)
-                  }
-                }}
-              />
-            </Col>
-            <Col span={1}/>
             <Col span={2}>
-              {displayIcon(newStoveGroupID && newStoveID)}
+              {displayIcon(newProjectMethodology)}
             </Col>
           </Row>
           <Divider />
-          {
-            //newValidStoveID ? <IntroFields/> : null}
-          }
-          {newValidStoveID && (
+          {newProjectMethodology === "GS-Cookstoves" && (
             <div>
               <Row>
                 <Col span={22}>
@@ -223,136 +225,198 @@ export default function Mint({
               <Divider />
               <Row>
                 <Col span={22}>
-                  <h2>Amount of Carbon (grams CO2e)</h2>
+                  <h2>Stove ID</h2>
                   <Input
                     onChange={e => {
-                      setNewAmount(e.target.value);
-                      console.log(e.target.value)
+                      const stoveID = parseInt(e.target.value)
+                      setNewStoveID(stoveID)
+                      if(!isNaN(stoveID)) {
+                        const result = tx(writeContracts.TonMinter.getStoveID(parseInt(stoveID)))
+                        result.then((stoveIDResult) => {
+                          console.log(stoveIDResult)
+                          setNewValidStoveID(stoveIDResult)
+                        })
+                      } else {
+                        setNewValidStoveID(false)
+                      }
                     }}
                   />
                 </Col>
                 <Col span={2}>
-                  {displayIcon(newAmount)}
+                  {displayIcon(newStoveID)}
                 </Col>
               </Row>
               <Divider />
-              <Row>
-                <Col span={22}>
-                  <h2>Batch Data</h2>
-                  <input type="file" accept=".xlsx" onChange={e =>
-                    handleChangeFile(e.target.files[0])} />
-                  <Input
-                    onChange={e => {
-                      setNewFile(e.target.value);
+            </div>
+          )}
+          {newValidStoveID && (
+            <div>
+            <Divider />
+              <div>
+                <Row>
+                  <Col span={22}>
+                    <h2>Amount of Carbon (tons CO2e)</h2>
+                    <Input
+                      onChange={e => {
+                        setNewAmount(e.target.value);
+                      }}
+                    />
+                  </Col>
+                  <Col span={2}>
+                    {displayIcon(newAmount)}
+                  </Col>
+                </Row>
+                <Divider />
+                <Row>
+                  <Col span={22}>
+                    <h2>Emission factor</h2>
+                    <Input
+                      onChange={e => {
+                        setNewEmissionFactor(e.target.value);
+                      }}
+                    />
+                  </Col>
+                  <Col span={2}>
+                    {displayIcon(newEmissionFactor)}
+                  </Col>
+                </Row>
+                <Divider />
+                <Row>
+                  <Col span={22}>
+                    <h2>Burn Time</h2>
+                    <Input
+                      onChange={e => {
+                        setNewBurnTime(e.target.value);
+                      }}
+                    />
+                  </Col>
+                  <Col span={2}>
+                    {displayIcon(newBurnTime)}
+                  </Col>
+                </Row>
+                <Divider />
+                <Row>
+                  <Col span={22}>
+                    <h2>Batch Data</h2>
+                      <input type="file" accept=".xlsx" onChange={e =>
+                        handleChangeFile(e.target.files[0])} />
+                      <h4>Or</h4>
+                      <Input
+                        placeholder="Arweave Link"
+                        onChange={e => {
+                          setNewFile(e.target.value);
+                        }}
+                      />
+                  </Col>
+                  <Col span={2}>
+                    {displayIcon(newFile)}
+                  </Col>
+                </Row>
+                <Divider />
+                <Row>
+                  <Col span={22}>
+                    <h2>Arweave Link</h2>
+                    <Input
+                      onChange={e => {
+                        setNewArweaveLink(e.target.value);
+                      }}
+                    />
+                  </Col>
+                  <Col span={2}>
+                    {displayIcon(newArweaveLink)}
+                  </Col>
+                </Row>
+                <Divider />
+                <Row>
+                  <Col span={22}>
+                    <h2>Verifier's Signature</h2>
+                    <Input
+                      onChange={e => {
+                        setNewFullSignature(e.target.value);
+                      }}
+                    />
+                  </Col>
+                  <Col span={2}>
+                    {displayIcon(newFullSignature)}
+                  </Col>
+                </Row>
+                <Divider />
+                <div style={{textAlign: "center"}}>
+                  <Button
+                    style={{ marginTop: 8 }}
+                    disabled={enableDataSubmit()}
+                    onClick={async () => {
+                      //const newMessage = newMethodology + newStoveID + newBurnTime + newEmissionFactor + newFile;
+                      const tokenMetadata = {
+                        "Project Methodology":newProjectMethodology,
+                        "Methodology":newMethodology,
+                        "Stove ID":newStoveID,
+                        "Number of Tonnes":newAmount,
+                        "Burn Time":newBurnTime,
+                        "Emission Factor":newEmissionFactor,
+                        "Data":newFile,
+                        "Project Developer":newAddress,
+                        "Verifier":verifierWallet,
+                        "Arweave Link":newArweaveLink
+                      }
+                      const newNonce = 1;
+                      setNewMessage(tokenMetadata)
+                      setNewNonce(newNonce)
+                      const result = tx(writeContracts.TonMinter.submitCarbonProof(
+                        newStoveID,
+                        newBurnTime,
+                        newEmissionFactor,
+                        verifierWallet,
+                        newAddress,
+                        newAmount,
+                        tokenMetadata,
+                        newNonce,
+                        newFullSignature));
+                      result.then(() => {
+                        const pendingTons = tx(writeContracts.TonMinter.getDeveloperPendingTons(address))
+                        pendingTons.then((tons) => {
+                          setNewPendingTons(tons.toNumber())
+                        })
+                      })
                     }}
-                  />
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newFile)}
-                </Col>
-              </Row>
-              <Divider />
-              <Row>
-                <Col span={22}>
-                  <h2>Emission factor</h2>
-                  <Input
-                    onChange={e => {
-                      setNewEmissionFactor(e.target.value);
-                    }}
-                  />
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newEmissionFactor)}
-                </Col>
-              </Row>
-              <Divider />
-              <Row>
-                <Col span={22}>
-                  <h2>Burn Time</h2>
-                  <Input
-                    onChange={e => {
-                      setNewBurnTime(e.target.value);
-                    }}
-                  />
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newBurnTime)}
-                </Col>
-              </Row>
-              <Divider />
-              <Row>
-                <Col span={22}>
-                  <h2>Verifier's Signature</h2>
-                  <Input
-                    onChange={e => {
-                      setNewFullSignature(e.target.value);
-                    }}
-                  />
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newFullSignature)}
-                </Col>
-              </Row>
-              <Divider />
-              <Row>
-                <Col span={22}>
-                  <h2>Arweave Link</h2>
-                  <Input
-                    onChange={e => {
-                      setNewArweaveLink(e.target.value);
-                    }}
-                  />
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newArweaveLink)}
-                </Col>
-              </Row>
-              <Divider />
-              <div style={{textAlign: "center"}}>
-                <Button
-                  style={{ marginTop: 8 }}
-                  disabled={enableDataSubmit()}
-                  onClick={async () => {
-                    const newMessage = newMethodology + newStoveGroupID + newStoveID + newBurnTime + newEmissionFactor + newFile;
-                    const newNonce = 1;
-                    setNewMessage(newMessage)
-                    setNewNonce(newNonce)
-                    console.log(newStoveID, newBurnTime, newEmissionFactor, newStoveGroupID, address, newAddress, newAmount, newMessage, newNonce, newFullSignature)
-                    const result = tx(writeContracts.TonMinter.submitCarbonProof(newStoveID, newBurnTime, newEmissionFactor, newStoveGroupID, address, newAddress, newAmount, newMessage, newNonce, newFullSignature));
-                    //const result = tx(writeContracts.Verifier.verify(address, newAddress, newAmount, newMessage, newNonce, newFullSignature));
-                    //setNewVerifyResult(await result)
-                    //setNewApproveMint(!result)
-                  }}
-                >
-                  Submit Proof
-                </Button>
-                <h4>Verify result: {newVerifyResult.toString()}</h4>
+                  >
+                    Submit Proof
+                  </Button>
+                  <h4>Pending CO2e: {newPendingTons} Tons</h4>
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-        <h2>
-          Mint Tonnage
-        </h2>
-        <div>
-          Pending CO2e grams: {}
+      {newValidStoveID && (
+        <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
+          <h2>
+            Mint Tonnage
+          </h2>
+          <Row>
+            <Col span={22}>
+              <h2>Number of Tons</h2>
+              <Input
+                onChange={e => {
+                  setNewTonsToMint(e.target.value);
+                }}
+              />
+            </Col>
+            <Col span={2}>
+              {displayIcon(newTonsToMint)}
+            </Col>
+          </Row>
+          <Button
+            //disabled={newApproveMint}
+            onClick={async () => {
+              tx(writeContracts.TonMinter.mintCVCU(newTonsToMint))
+            }}
+          >
+            Mint
+          </Button>
         </div>
-        <Button
-          //disabled={newApproveMint}
-          onClick={async () => {
-            console.log("Mint")
-            console.log(readContracts.TonMinter)
-            const result = readContracts.TonMinter.getGroupProofsPendingGrams(newStoveID)
-            result.then((pendingCO2e) => {
-              console.log(pendingCO2e)
-            })
-          }}
-        >
-          Mint
-        </Button>
-      </div>
+      )}
     </div>
   )
 }

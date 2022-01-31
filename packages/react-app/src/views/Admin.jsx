@@ -25,14 +25,15 @@ export default function Admin({
     }
   }
 
-  const [newStoveID, setNewStoveID] = useState(null);
-  const [newStoveGroupID, setNewStoveGroupID] = useState(null);
-  const [newAdmin, setNewAdmin] = useState(null);
   const [newApproveDeveloper, setNewApproveDeveloper] = useState(null);
   const [newRemoveDeveloper, setNewRemoveDeveloper] = useState(null);
+  const [newCheckDeveloper, setNewCheckDeveloper] = useState(null);
+  const [newIsDeveloper, setNewIsDeveloper] = useState(null);
   const [newApproveVerifier, setNewApproveVerifier] = useState(null);
   const [newRemoveVerifier, setNewRemoveVerifier] = useState(null);
-
+  const [newCheckVerifier, setNewCheckVerifier] = useState(null);
+  const [newIsVerifier, setNewIsVerifier] = useState(null);
+  const [newCVCUAddress, setNewCVCUAddress] = useState(null);
 
   return (
     <div>
@@ -49,6 +50,33 @@ export default function Admin({
             ensProvider={mainnetProvider}
             fontSize={16}
           />
+        </div>
+      </div>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
+        <div>
+          <Row>
+            <Col span={22}>
+              <h2>Set TonMinter CVCU</h2>
+              <Input
+                placeholder="CVCU Address"
+                onChange={e => {
+                  setNewCVCUAddress(e.target.value);
+                }}
+              />
+            </Col>
+            <Col span={2}>
+              {displayIcon(newCVCUAddress)}
+            </Col>
+          </Row>
+          <div style={{textAlign: "center"}}>
+            <Button
+              onClick={async () => {
+                const result = tx(writeContracts.TonMinter.setTonMinterCVCU(newCVCUAddress));
+              }}
+            >
+              Set
+            </Button>
+          </div>
         </div>
       </div>
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
@@ -99,6 +127,66 @@ export default function Admin({
             >
               Approve
             </Button>
+          </div>
+          <Divider />
+        </div>
+      </div>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
+        <div>
+          <Row>
+            <Col span={22}>
+              <h2>Check a Project Developer</h2>
+              <Input
+                onChange={e => {
+                  setNewCheckDeveloper(e.target.value);
+                }}
+              />
+            </Col>
+            <Col span={2}>
+              {displayIcon(newCheckDeveloper)}
+            </Col>
+          </Row>
+          <div style={{textAlign: "center"}}>
+            <Button
+              onClick={async () => {
+                const result = tx(readContracts.TonMinter.isProjectDeveloper(newCheckDeveloper));
+                result.then((projectDevBool) => {
+                  setNewIsDeveloper(projectDevBool.toString());
+                })
+              }}
+            >
+              Check
+            </Button>
+            <h4>Status: {newIsDeveloper}</h4>
+          </div>
+          <Divider />
+        </div>
+        <div>
+          <Row>
+            <Col span={22}>
+              <h2>Check a Project Verifier</h2>
+              <Input
+                onChange={e => {
+                  setNewCheckVerifier(e.target.value);
+                }}
+              />
+            </Col>
+            <Col span={2}>
+              {displayIcon(newCheckVerifier)}
+            </Col>
+          </Row>
+          <div style={{textAlign: "center"}}>
+            <Button
+              onClick={async () => {
+                const result = tx(writeContracts.TonMinter.isValidVerifier(newCheckVerifier));
+                result.then((projectVerifierBool) => {
+                  setNewIsVerifier(projectVerifierBool.toString())
+                })
+              }}
+            >
+              Check
+            </Button>
+            <h4>Status: {newIsVerifier}</h4>
           </div>
           <Divider />
         </div>

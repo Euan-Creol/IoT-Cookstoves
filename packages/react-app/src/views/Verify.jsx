@@ -29,6 +29,10 @@ export default function Verify({
     setNewAddress(key)
   };
 
+  const onClickProjectMethodology = ({ key }) => {
+    setNewProjectMethodology(key)
+  };
+
   const onClickMethodology = ({ key }) => {
     setNewMethodology(key)
   };
@@ -40,6 +44,14 @@ export default function Verify({
       </Menu.Item>
       <Menu.Item key={ACEWallet}>
         ACE
+      </Menu.Item>
+    </Menu>
+  );
+
+  const projectMethodologyDropdown = (
+    <Menu onClick={onClickProjectMethodology}>
+      <Menu.Item key={"GS-Cookstoves"}>
+        Gold Standard - METHODOLOGY FOR METERED & MEASURED ENERGY COOKING DEVICES
       </Menu.Item>
     </Menu>
   );
@@ -69,7 +81,6 @@ export default function Verify({
     && newFile !== null
     && newMethodology !== null
     && newStoveID !== null
-    && newStoveGroupID !== null
     && newBurnTime !== null
     && newEmissionFactor !== null
     && newArweaveLink !== null) {
@@ -216,11 +227,12 @@ export default function Verify({
   const [newAddress, setNewAddress] = useState(null);
   const [newAmount, setNewAmount] = useState(null);
   const [newNonce, setNewNonce] = useState(null);
+  const [newProjectMethodology, setNewProjectMethodology] = useState(null);
   const [newMethodology, setNewMethodology] = useState(null);
   const [newMessageHash, setNewMessageHash] = useState(null);
   const [newFullSignature, setNewFullSignature] = useState('');
   const [newStoveID, setNewStoveID] = useState(null);
-  const [newStoveGroupID, setNewStoveGroupID] = useState(null);
+  const [newValidStoveID, setNewValidStoveID] = useState(false);
   const [newBurnTime, setNewBurnTime] = useState(null);
   const [newEmissionFactor, setNewEmissionFactor] = useState(null);
   const [newArweaveLink, setNewArweaveLink] = useState(null);
@@ -268,159 +280,200 @@ export default function Verify({
             <Col span={22}>
               <Space direction="vertical">
                 <Space wrap>
-                  <Dropdown overlay={methodologyDropdown} click placement="bottomCenter" >
+                  <Dropdown overlay={projectMethodologyDropdown} click placement="bottomCenter" >
                     <h2>
                       <a className="ant-dropdown-link" style={{ color: '#cccccc' }} onClick={e => e.preventDefault()}>
-                        Methodology <DownOutlined />
+                        Project Methodology <DownOutlined />
                       </a>
                     </h2>
                   </Dropdown>
                 </Space>
               </Space>
-              <h4>{newMethodology}</h4>
+              <h4>{newProjectMethodology}</h4>
             </Col>
             <Col span={2}>
-              {displayIcon(newMethodology)}
+              {displayIcon(newProjectMethodology)}
             </Col>
           </Row>
           <Divider />
-          <Row>
-            <Col span={10}>
-              <h2>Stove Group ID</h2>
-              <Input
-                style={{marginRight:10}}
-                onChange={e => {
-                  setNewStoveGroupID(e.target.value);
-                }}
-              />
-            </Col>
-            <Col span={1}/>
-            <Col span={10}>
-              <h2>Stove ID</h2>
-              <Input
-                onChange={e => {
-                  setNewStoveID(e.target.value);
-                }}
-              />
-            </Col>
-            <Col span={1}/>
-            <Col span={2}>
-              {displayIcon(newStoveGroupID && newStoveID)}
-            </Col>
-          </Row>
-          <Divider />
-          <Row>
-            <Col span={22}>
-              <h2>Amount of Carbon (grams CO2e)</h2>
-              <Input
-                onChange={e => {
-                  setNewAmount(e.target.value);
-                }}
-              />
-            </Col>
-            <Col span={2}>
-              {displayIcon(newAmount)}
-            </Col>
-          </Row>
-          <Divider />
-          <Row>
-            <Col span={22}>
-              <h2>Emission factor</h2>
-              <Input
-                onChange={e => {
-                  setNewEmissionFactor(e.target.value);
-                }}
-              />
-            </Col>
-            <Col span={2}>
-              {displayIcon(newEmissionFactor)}
-            </Col>
-          </Row>
-          <Divider />
-          <Row>
-            <Col span={22}>
-              <h2>Burn Time</h2>
-              <Input
-                onChange={e => {
-                  setNewBurnTime(e.target.value);
-                }}
-              />
-            </Col>
-            <Col span={2}>
-              {displayIcon(newBurnTime)}
-            </Col>
-          </Row>
-          <Divider />
-          <Row>
-            <Col span={22}>
-              <h2>Batch Data</h2>
-              <input type="file" accept=".xlsx" onChange={e =>
-                handleChangeFile(e.target.files[0])} />
-              <Input
-                onChange={e => {
-                  setNewFile(e.target.value);
-                }}
-              />
-            </Col>
-            <Col span={2}>
-              {displayIcon(newMessage)}
-            </Col>
-          </Row>
-          <Divider />
-          <Row>
-            <Col span={22}>
-              <h2>Arweave Link</h2>
-              <Input
-                onChange={e => {
-                  setNewArweaveLink(e.target.value);
-                }}
-              />
-            </Col>
-            <Col span={2}>
-              {displayIcon(newArweaveLink)}
-            </Col>
-          </Row>
-          <Row>
-            <Col span={22}>
-              <div>
-                How to upload to Arweave >
-              </div>
-            </Col>
-            <Col span={2}/>
-          </Row>
-          <Divider />
-          <div style={{textAlign: "center"}}>
-            <Button
-              disabled={enableDataSubmit()}
-              onClick={async () => {
-                const newMessage = newMethodology + newStoveGroupID + newStoveID + newBurnTime + newEmissionFactor + newFile;
-                const newNonce = 1;
-                setNewMessage(newMessage)
-                setNewNonce(newNonce)
-                //Hash the message
-                const result = tx(writeContracts.Verifier.getMessageHash(newAddress, parseInt(newAmount), newMessage, parseInt(newNonce)));
-                setNewMessageHash(await result)
-                result.then((messageHash) => {
-                  //Sign the message hash
-                  let signPromise = userSigner.signMessage(arrayify(messageHash))
-                  signPromise.then((signature) => {
-                    setNewFullSignature(signature)})
-                })
-              }}
-            >
-              Sign data
-            </Button>
+          {newProjectMethodology === "GS-Cookstoves" && (
             <div>
-              <Text copyable={{ text: newFullSignature }}>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  {newFullSignature.slice(0,5) + '...' + newFullSignature.slice((newFullSignature.length)-5,newFullSignature.length)}
-                </a>
-              </Text>
+              <Row>
+                <Col span={22}>
+                  <Space direction="vertical">
+                    <Space wrap>
+                      <Dropdown overlay={methodologyDropdown} click placement="bottomCenter" >
+                        <h2>
+                          <a className="ant-dropdown-link" style={{ color: '#cccccc' }} onClick={e => e.preventDefault()}>
+                            Methodology <DownOutlined />
+                          </a>
+                        </h2>
+                      </Dropdown>
+                    </Space>
+                  </Space>
+                  <h4>{newMethodology}</h4>
+                </Col>
+                <Col span={2}>
+                  {displayIcon(newMethodology)}
+                </Col>
+              </Row>
+              <Divider />
+              <Row>
+                <Col span={22}>
+                  <h2>Stove ID</h2>
+                  <Input
+                    onChange={e => {
+                      const stoveID = parseInt(e.target.value)
+                      setNewStoveID(stoveID)
+                      if(!isNaN(stoveID)) {
+                        const result = tx(writeContracts.TonMinter.getStoveID(parseInt(stoveID)))
+                        result.then((stoveIDResult) => {
+                          console.log(stoveIDResult)
+                          setNewValidStoveID(stoveIDResult)
+                        })
+                      } else {
+                        setNewValidStoveID(false)
+                      }
+                    }}
+                  />
+                </Col>
+                <Col span={2}>
+                  {displayIcon(newStoveID)}
+                </Col>
+              </Row>
+            </div>
+          )}
+          {newValidStoveID && (
+          <div>
+            <Divider />
+              <Row>
+                <Col span={22}>
+                  <h2>Amount of Carbon (tons CO2e)</h2>
+                  <Input
+                    onChange={e => {
+                      setNewAmount(e.target.value);
+                    }}
+                  />
+                </Col>
+                <Col span={2}>
+                  {displayIcon(newAmount)}
+                </Col>
+              </Row>
+            <Divider />
+            <Row>
+              <Col span={22}>
+                <h2>Emission factor</h2>
+                <Input
+                  onChange={e => {
+                    setNewEmissionFactor(e.target.value);
+                  }}
+                />
+              </Col>
+              <Col span={2}>
+                {displayIcon(newEmissionFactor)}
+              </Col>
+            </Row>
+            <Divider />
+            <Row>
+              <Col span={22}>
+                <h2>Burn Time</h2>
+                <Input
+                  onChange={e => {
+                    setNewBurnTime(e.target.value);
+                  }}
+                />
+              </Col>
+              <Col span={2}>
+                {displayIcon(newBurnTime)}
+              </Col>
+            </Row>
+            <Divider />
+            <Row>
+              <Col span={22}>
+                <h2>Batch Data</h2>
+                <input type="file" accept=".xlsx" onChange={e =>
+                  handleChangeFile(e.target.files[0])} />
+                <h4>Or</h4>
+                <Input
+                  placeholder="Arweave Link"
+                  onChange={e => {
+                    setNewFile(e.target.value);
+                  }}
+                />
+              </Col>
+              <Col span={2}>
+                {displayIcon(newMessage)}
+              </Col>
+            </Row>
+            <Divider />
+            <Row>
+              <Col span={22}>
+                <h2>Arweave Link</h2>
+                <Input
+                  onChange={e => {
+                    setNewArweaveLink(e.target.value);
+                  }}
+                />
+              </Col>
+              <Col span={2}>
+                {displayIcon(newArweaveLink)}
+              </Col>
+            </Row>
+            <Row>
+              <Col span={22}>
+                <div>
+                  How to upload to Arweave >
+                </div>
+              </Col>
+              <Col span={2}/>
+            </Row>
+            <Divider />
+            <div style={{textAlign: "center"}}>
+              <Button
+                disabled={enableDataSubmit()}
+                onClick={async () => {
+                  const newMessage = newMethodology + newStoveID + newBurnTime + newEmissionFactor + newFile;
+                  const tokenMetadata = {
+                    "Project Methodology":newProjectMethodology,
+                    "Methodology":newMethodology,
+                    "Stove ID":newStoveID,
+                    "Number of Tonnes":newAmount,
+                    "Burn Time":newBurnTime,
+                    "Emission Factor":newEmissionFactor,
+                    "Data":newFile,
+                    "Project Developer":newAddress,
+                    "Verifier":address,
+                    "Arweave Link":newArweaveLink
+                  }
+                  const newNonce = 1;
+                  setNewMessage(tokenMetadata)
+                  setNewNonce(newNonce)
+                  //Hash the message
+                  const result = tx(writeContracts.TonMinter.getMessageHash(newAddress, parseInt(newAmount), tokenMetadata, parseInt(newNonce)));
+                  setNewMessageHash(await result)
+                  result.then((messageHash) => {
+                    //Sign the message hash
+                    let signPromise = userSigner.signMessage(arrayify(messageHash))
+                    signPromise.then((signature) => {
+                      setNewFullSignature(signature)})
+                  })
+                }}
+              >
+                Sign data
+              </Button>
+              <div>
+                <Text copyable={{ text: newFullSignature }}>
+                  <a
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {newFullSignature.slice(0,5) + '...' + newFullSignature.slice((newFullSignature.length)-5,newFullSignature.length)}
+                  </a>
+                </Text>
+              </div>
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>
