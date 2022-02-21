@@ -8,7 +8,7 @@ import {arrayify} from "@ethersproject/bytes";
 import XLSX from 'xlsx';
 import { JsonToTable } from "react-json-to-table";
 
-export default function Verify({
+export default function Upload({
   address,
   userSigner,
   mainnetProvider,
@@ -78,7 +78,6 @@ export default function Verify({
   function enableDataSubmit() {
   if (newAddress !== null
     && newAmount !== null
-    && newFile !== null
     && newMethodology !== null
     && newStoveID !== null
     && newVintageStart !== null
@@ -112,114 +111,6 @@ export default function Verify({
     fileData.readAsBinaryString(file)
   }
 
-  const tableColumns = [
-    {
-      title: 'Row',
-      dataIndex: 'Row',
-      key: 'Row',
-    },
-    {
-      title: 'entryCount',
-      dataIndex: 'entryCount',
-      key: 'entryCount',
-    },
-    {
-      title: 'entryDate',
-      dataIndex: 'entryDate',
-      key: 'entryDate',
-    },
-    {
-      title: 'timeStamp',
-      dataIndex: 'timeStamp',
-      key: 'timeStamp',
-    },
-    {
-      title: 'fanSeconds',
-      dataIndex: 'fanSeconds',
-      key: 'fanSeconds',
-    },
-    {
-      title: 'usbLampSeconds',
-      dataIndex: 'usbLampSeconds',
-      key: 'usbLampSeconds',
-    },
-    {
-      title: 'usbPhoneSeconds',
-      dataIndex: 'usbPhoneSeconds',
-      key: 'usbPhoneSeconds',
-    },
-    {
-      title: 'battVoltage',
-      dataIndex: 'battVoltage',
-      key: 'battVoltage',
-    },
-    {
-      title: 'inpVoltage',
-      dataIndex: 'inpVoltage',
-      key: 'inpVoltage',
-    },
-    {
-      title: 'version',
-      dataIndex: 'version',
-      key: 'version',
-    },
-    {
-      title: 'remainingCredit',
-      dataIndex: 'remainingCredit',
-      key: 'remainingCredit',
-    },
-    {
-      title: 'sequenceNumber',
-      dataIndex: 'sequenceNumber',
-      key: 'sequenceNumber',
-    },
-    {
-      title: 'chargeCurrent',
-      dataIndex: 'chargeCurrent',
-      key: 'chargeCurrent',
-    },
-    {
-      title: 'potMeter',
-      dataIndex: 'potMeter',
-      key: 'potMeter',
-    },
-    {
-      title: 'event',
-      dataIndex: 'event',
-      key: 'event',
-    },
-    {
-      title: 'paymentScheme',
-      dataIndex: 'paymentScheme',
-      key: 'paymentScheme',
-    },
-    {
-      title: 'stoveBookId',
-      dataIndex: 'stoveBookId',
-      key: 'stoveBookId',
-    },
-    {
-      title: 'customerId',
-      dataIndex: 'customerId',
-      key: 'customerId',
-    },
-    {
-      title: 'controllerId',
-      dataIndex: 'controllerId',
-      key: 'controllerId',
-    },
-    {
-      title: 'uploadDate',
-      dataIndex: 'uploadDate',
-      key: 'uploadDate',
-    },
-    {
-      title: 'uploadSource',
-      dataIndex: 'uploadSource',
-      key: 'uploadSource',
-    },
-  ];
-
   const { Text } = Typography;
 
   const [newMessage, setNewMessage] = useState(null);
@@ -229,19 +120,17 @@ export default function Verify({
   const [newNonce, setNewNonce] = useState(null);
   const [newProjectMethodology, setNewProjectMethodology] = useState(null);
   const [newMethodology, setNewMethodology] = useState(null);
-  const [newMessageHash, setNewMessageHash] = useState(null);
   const [newFullSignature, setNewFullSignature] = useState('');
   const [newStoveID, setNewStoveID] = useState(null);
   const [newValidStoveID, setNewValidStoveID] = useState(false);
   const [newVintageStart, setNewVintageStart] = useState(null);
   const [newVintageEnd, setNewVintageEnd] = useState(null);
-  const [newBurnTime, setNewBurnTime] = useState(null);
-  const [newEmissionFactor, setNewEmissionFactor] = useState(null);
   const [newArweaveLink, setNewArweaveLink] = useState(null);
+  const [newTokenID, setNewTokenID] = useState(null);
 
   return (
     <div>
-      <h1>Verify</h1>
+      <h1>Upload Data</h1>
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
         <div>
           Your Address:
@@ -254,6 +143,39 @@ export default function Verify({
             ensProvider={mainnetProvider}
             fontSize={16}
           />
+        </div>
+      </div>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
+        <div style={{ margin: 8 }}>
+          <Row>
+            <Col>
+              <h2>Create empty NFT</h2>
+            </Col>
+            <Col>
+              <button onClick={async() => {
+                const result = tx(writeContracts.TonMinter.mintEmptyVCU())
+                result.then((tokenID) => {
+                  setNewTokenID(tokenID)
+                  console.log(tokenID)
+                })
+              }}>
+                Create
+              </button>
+              <button onClick={async() => {
+                const result = tx(writeContracts.TonMinter.testReturn())
+                result.then((tokenID) => {
+                  console.log(tokenID)
+                })
+              }}>
+                TEst
+              </button>
+            </Col>
+          </Row>
+          <div>
+            <h4>
+              Token ID: {}
+            </h4>
+          </div>
         </div>
       </div>
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
@@ -542,23 +464,6 @@ export default function Verify({
             <Divider />
             <Row>
               <Col span={22}>
-                <h2>Batch Data</h2>
-                <input type="file" accept=".xlsx" onChange={e =>
-                  handleChangeFile(e.target.files[0])} />
-                <h4>Or</h4>
-                <Input
-                  onChange={e => {
-                    setNewFile(e.target.value);
-                  }}
-                />
-              </Col>
-              <Col span={2}>
-                {displayIcon(newFile)}
-              </Col>
-            </Row>
-            <Divider />
-            <Row>
-              <Col span={22}>
                 <h2>Arweave Link</h2>
                 <Input
                   placeholder="Arweave Link"
@@ -587,27 +492,17 @@ export default function Verify({
                   const tokenMetadata = {
                     "Project Methodology":newProjectMethodology,
                     "Methodology":newMethodology,
-                    "Stove ID":newStoveID,
                     "Number of Tonnes":newAmount,
                     "Vintage Start":newVintageStart,
                     "Vintage End":newVintageEnd,
-                    "Data":newFile,
-                    "Project Developer":newAddress,
-                    "Verifier":address,
+                    "Project Developer":address,
                     "Arweave Link":newArweaveLink
                   }
                   const newNonce = 1;
                   setNewMessage(tokenMetadata)
                   setNewNonce(newNonce)
                   //Hash the message
-                  const result = tx(writeContracts.TonMinter.getMessageHash(newAddress, parseInt(newAmount), tokenMetadata, parseInt(newNonce)));
-                  setNewMessageHash(await result)
-                  result.then((messageHash) => {
-                    //Sign the message hash
-                    let signPromise = userSigner.signMessage(arrayify(messageHash))
-                    signPromise.then((signature) => {
-                      setNewFullSignature(signature)})
-                  })
+                  const result = tx(writeContracts.TonMinter.mintCU(newAddress, parseInt(newAmount), tokenMetadata, parseInt(newNonce)));
                 }}
               >
                 Sign data

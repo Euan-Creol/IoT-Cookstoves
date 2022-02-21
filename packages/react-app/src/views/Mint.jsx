@@ -1,5 +1,5 @@
 import { utils, Wallet } from "ethers";
-import { Button, Divider, Input, Dropdown, Menu, Space, Row, Col } from "antd";
+import { Button, Divider, Input, Dropdown, Menu, Space, Row, Col, Calendar, Select, Radio, Typography } from "antd";
 import { DownOutlined, CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import React, {useEffect, useState} from "react";
 import { Address, Balance, Events } from "../components";
@@ -21,6 +21,7 @@ export default function Mint({
   const onClick = ({ key }) => {
     setNewAddress(key)
   };
+
 
   //TO-DO change to actual wallets
   const verifierWallet = '0x2BaFF0a5838Aa1F03dEFe89a4086362fe31F6675' //Wallet.createRandom()
@@ -87,8 +88,8 @@ export default function Mint({
       && newFile !== null
       && newMethodology !== null
       && newStoveID !== null
-      && newBurnTime !== null
-      && newEmissionFactor !== null
+      && newVintageStart !== null
+      && newVintageEnd !== null
       && newArweaveLink !== null
       && newFullSignature) {
       return false
@@ -132,6 +133,8 @@ export default function Mint({
   const [newMessageHash, setNewMessageHash] = useState(null);
   const [newStoveID, setNewStoveID] = useState(null);
   const [newValidStoveID, setNewValidStoveID] = useState(false);
+  const [newVintageStart, setNewVintageStart] = useState(null);
+  const [newVintageEnd, setNewVintageEnd] = useState(null);
   const [newBurnTime, setNewBurnTime] = useState(null);
   const [newEmissionFactor, setNewEmissionFactor] = useState(null);
   const [newArweaveLink, setNewArweaveLink] = useState(null);
@@ -157,6 +160,22 @@ export default function Mint({
         </div>
         <div>
           Pending CO2e: {newPendingTons} Tons
+        </div>
+      </div>
+      <div style={{ border: "1px solid #2faf49", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
+        <div style={{ margin: 8 }}>
+          <Row>
+            <Col span={22}>
+              <h2>New Empty Carbon VCU</h2>
+              <Button onClick={async () => {
+                const result = tx(writeContracts.TonMinter.mintEmptyCVCU());
+                console.log(await result)
+              }}>
+                Create
+              </Button>
+              <h4>Token ID: {}</h4>
+            </Col>
+          </Row>
         </div>
       </div>
       <div style={{ border: "1px solid #2faf49", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
@@ -269,29 +288,179 @@ export default function Mint({
                 <Divider />
                 <Row>
                   <Col span={22}>
-                    <h2>Emission factor</h2>
-                    <Input
-                      onChange={e => {
-                        setNewEmissionFactor(e.target.value);
+                    <h2>Vintage Start</h2>
+                    <Calendar
+                      fullscreen={false}
+                      headerRender={({ value, type, onChange, onTypeChange }) => {
+                        const start = 0;
+                        const end = 12;
+                        const monthOptions = [];
+
+                        const current = value.clone();
+                        const localeData = value.localeData();
+                        const months = [];
+                        for (let i = 0; i < 12; i++) {
+                          current.month(i);
+                          months.push(localeData.monthsShort(current));
+                        }
+
+                        for (let index = start; index < end; index++) {
+                          monthOptions.push(
+                            <Select.Option className="month-item" key={`${index}`}>
+                              {months[index]}
+                            </Select.Option>,
+                          );
+                        }
+                        const month = value.month();
+
+                        const year = value.year();
+                        const options = [];
+                        for (let i = year - 10; i < year + 10; i += 1) {
+                          options.push(
+                            <Select.Option key={i} value={i} className="year-item">
+                              {i}
+                            </Select.Option>,
+                          );
+                        }
+                        return (
+                          <div style={{ padding: 8 }}>
+                            <Row gutter={8}>
+                              <Col>
+                                <Radio.Group size="small" onChange={e => onTypeChange(e.target.value)} value={type}>
+                                  <Radio.Button value="month">Month</Radio.Button>
+                                  <Radio.Button value="year">Year</Radio.Button>
+                                </Radio.Group>
+                              </Col>
+                              <Col>
+                                <Select
+                                  size="small"
+                                  dropdownMatchSelectWidth={false}
+                                  className="my-year-select"
+                                  onChange={newYear => {
+                                    const now = value.clone().year(newYear);
+                                    onChange(now);
+                                  }}
+                                  value={String(year)}
+                                >
+                                  {options}
+                                </Select>
+                              </Col>
+                              <Col>
+                                <Select
+                                  size="small"
+                                  dropdownMatchSelectWidth={false}
+                                  value={String(month)}
+                                  onChange={selectedMonth => {
+                                    const newValue = value.clone();
+                                    newValue.month(parseInt(selectedMonth, 10));
+                                    onChange(newValue);
+                                  }}
+                                >
+                                  {monthOptions}
+                                </Select>
+                              </Col>
+                              <Col>
+                                <button hidden={true} onClick={setNewVintageStart(value)}>
+                                  Submit
+                                </button>
+                              </Col>
+                            </Row>
+                          </div>
+                        );
                       }}
                     />
                   </Col>
                   <Col span={2}>
-                    {displayIcon(newEmissionFactor)}
+                    {displayIcon(newVintageStart)}
                   </Col>
                 </Row>
                 <Divider />
                 <Row>
                   <Col span={22}>
-                    <h2>Burn Time</h2>
-                    <Input
-                      onChange={e => {
-                        setNewBurnTime(e.target.value);
+                    <h2>Vintage End</h2>
+                    <Calendar
+                      fullscreen={false}
+                      headerRender={({ value, type, onChange, onTypeChange }) => {
+                        const start = 0;
+                        const end = 12;
+                        const monthOptions = [];
+
+                        const current = value.clone();
+                        const localeData = value.localeData();
+                        const months = [];
+                        for (let i = 0; i < 12; i++) {
+                          current.month(i);
+                          months.push(localeData.monthsShort(current));
+                        }
+
+                        for (let index = start; index < end; index++) {
+                          monthOptions.push(
+                            <Select.Option className="month-item" key={`${index}`}>
+                              {months[index]}
+                            </Select.Option>,
+                          );
+                        }
+                        const month = value.month();
+
+                        const year = value.year();
+                        const options = [];
+                        for (let i = year - 10; i < year + 10; i += 1) {
+                          options.push(
+                            <Select.Option key={i} value={i} className="year-item">
+                              {i}
+                            </Select.Option>,
+                          );
+                        }
+                        return (
+                          <div style={{ padding: 8 }}>
+                            <Row gutter={8}>
+                              <Col>
+                                <Radio.Group size="small" onChange={e => onTypeChange(e.target.value)} value={type}>
+                                  <Radio.Button value="month">Month</Radio.Button>
+                                  <Radio.Button value="year">Year</Radio.Button>
+                                </Radio.Group>
+                              </Col>
+                              <Col>
+                                <Select
+                                  size="small"
+                                  dropdownMatchSelectWidth={false}
+                                  className="my-year-select"
+                                  onChange={newYear => {
+                                    const now = value.clone().year(newYear);
+                                    onChange(now);
+                                  }}
+                                  value={String(year)}
+                                >
+                                  {options}
+                                </Select>
+                              </Col>
+                              <Col>
+                                <Select
+                                  size="small"
+                                  dropdownMatchSelectWidth={false}
+                                  value={String(month)}
+                                  onChange={selectedMonth => {
+                                    const newValue = value.clone();
+                                    newValue.month(parseInt(selectedMonth, 10));
+                                    onChange(newValue);
+                                  }}
+                                >
+                                  {monthOptions}
+                                </Select>
+                              </Col>
+                              <Col>
+                                <button hidden={true} onClick={setNewVintageEnd(value)}>
+                                  Submit
+                                </button>
+                              </Col>
+                            </Row>
+                          </div>
+                        );
                       }}
                     />
                   </Col>
                   <Col span={2}>
-                    {displayIcon(newBurnTime)}
+                    {displayIcon(newVintageEnd)}
                   </Col>
                 </Row>
                 <Divider />
@@ -302,7 +471,6 @@ export default function Mint({
                         handleChangeFile(e.target.files[0])} />
                       <h4>Or</h4>
                       <Input
-                        placeholder="Arweave Link"
                         onChange={e => {
                           setNewFile(e.target.value);
                         }}
@@ -317,6 +485,7 @@ export default function Mint({
                   <Col span={22}>
                     <h2>Arweave Link</h2>
                     <Input
+                      placeholder="Arweave Link"
                       onChange={e => {
                         setNewArweaveLink(e.target.value);
                       }}
@@ -352,8 +521,8 @@ export default function Mint({
                         "Methodology":newMethodology,
                         "Stove ID":newStoveID,
                         "Number of Tonnes":newAmount,
-                        "Burn Time":newBurnTime,
-                        "Emission Factor":newEmissionFactor,
+                        "Vintage Start":newVintageStart,
+                        "Vintage End":newVintageEnd,
                         "Data":newFile,
                         "Project Developer":newAddress,
                         "Verifier":verifierWallet,
@@ -364,8 +533,6 @@ export default function Mint({
                       setNewNonce(newNonce)
                       const result = tx(writeContracts.TonMinter.submitCarbonProof(
                         newStoveID,
-                        newBurnTime,
-                        newEmissionFactor,
                         verifierWallet,
                         newAddress,
                         newAmount,

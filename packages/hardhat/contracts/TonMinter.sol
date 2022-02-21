@@ -33,9 +33,15 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/math/SafeMathUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
+import '@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol';
+import '@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol';
+import "@openzeppelin/contracts/utils/Counters.sol";
 
-import "./CarbonVCUInterface.sol";
+import "./Interfaces/IContractNFT.sol";
+import "./Definitions.sol";
+import "./Interfaces/CarbonVCUInterface.sol";
 import "hardhat/console.sol";
+
 /*
   _____            _                  _
  / ____|          | |                | |
@@ -51,7 +57,11 @@ import "hardhat/console.sol";
  * @notice Prototype Contract that accepts signed proofs of a IoT Cookstove and mints an NFT ton when it hits 1000kg
  *
  */
-contract TonMinter is Initializable, AccessControlUpgradeable {
+contract TonMinter is
+AccessControlUpgradeable,
+IContractNFT,
+ERC721EnumerableUpgradeable
+{
 
     /**
      *
@@ -64,14 +74,12 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
      *
      *
      */
-    event newProofSubmitted(uint256 stoveID, uint256 burnTime, uint256 emssionFactor, uint256 gramsCO2e, address projectDeveloperAddress);
-    event newPendingCO2eTons(uint256 pendingCO2eTons, address projectDeveloperAddress);
     event newStoveID(uint256 stoveID);
     event stoveIDRemoved(uint256 stoveID);
-    event newStoveIPFSURI(string stoveURI);
     event newTonMinterCVCU(address newCVCU);
-    event dataHashed(address toAddress, uint amount, string message, uint nonce);
-    event dataVerified(address signer, address toAddress, uint amount, string message, uint nonce, bool verificationBool);
+    event VCUSMinted(address sender, uint256 tokenID);
+    event VCUSUpdated(uint256 tokenID, ConfirmationStatus status);
+    event VCUSStatusUpdated(uint256 tokenID);
 
 
     /**
@@ -86,9 +94,15 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
      *
      */
 
+
+
     using SafeMathUpgradeable for uint256;
 
+    using Counters for Counters.Counter;
+    Counters.Counter private _tokenIDs;
+
     bytes32 public constant PROJECT_DEVELOPER_ROLE = keccak256("PROJECT_DEVELOPER_ROLE");
+    bytes32 public constant VERIFIER_ROLE = keccak256("VERIFIER_ROLE");
 
     address public creolSuper;
     address public CVCUAddress;
@@ -123,6 +137,8 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
     mapping (address => bool) public isValidVerifier;
     mapping (bytes => bool) public isSubmittedBatch;
 
+    mapping(uint256 => VCUSData) public list;
+
 
     /**
      *   __  __           _ _  __ _
@@ -135,10 +151,15 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
     modifier onlyAdmin() {
     require(isAdmin(msg.sender), "Restricted to admins.");
     _;
-  }
+    }
 
     modifier onlyProjectDeveloper() {
         require(isProjectDeveloper(msg.sender), "Restricted to project developers");
+        _;
+    }
+
+    modifier onlyVerifier() {
+        require(isVerifier(msg.sender), "Restricted to project developers");
         _;
     }
 
@@ -155,10 +176,17 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
 
 
 
-     constructor () {
-         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-         _setRoleAdmin(PROJECT_DEVELOPER_ROLE, DEFAULT_ADMIN_ROLE);
-     }
+    function initialize(address _address) public virtual initializer {
+        __ERC721_init_unchained(
+            'Test Verified Carbon Units',
+            'Test-VCUs'
+        );
+        _setupRole(DEFAULT_ADMIN_ROLE, _address
+        );
+        creolSuper = _address;
+        _setRoleAdmin(PROJECT_DEVELOPER_ROLE, DEFAULT_ADMIN_ROLE);
+        _setRoleAdmin(VERIFIER_ROLE, DEFAULT_ADMIN_ROLE);
+    }
 
     /**
       * @dev check whether an account has admin role
@@ -166,47 +194,31 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
       */
      function isAdmin(address account) public virtual view returns (bool) {
          return hasRole(DEFAULT_ADMIN_ROLE, account);
-     }
-
-    /**
-      * @dev check whether an account has project developer role
-      * @param account Address to check
-      */
-     function isProjectDeveloper(address account) public virtual view returns (bool) {
-         return hasRole(PROJECT_DEVELOPER_ROLE, account);
-     }
-
-    /**
-      * @dev give an address the project developer role
-      * @param account Address to give role to
-      */
-     function addProjectDeveloper(address account) public virtual onlyAdmin {
-         grantRole(PROJECT_DEVELOPER_ROLE, account);
-         addressToProjectDevInfo[account];
-     }
-
-    /**
-      * @dev remove the project developer role from an address
-      * @param account Address to remove role from
-      */
-     function removeProjectDeveloper(address account) public virtual onlyAdmin {
-         revokeRole(PROJECT_DEVELOPER_ROLE, account);
-     }
-
-    /**
-      * @dev give an address the verifier role
-      * @param account Address to give role to
-      */
-    function addValidVerifier(address account) public onlyAdmin {
-        isValidVerifier[account] = true;
     }
 
-    /**
-      * @dev remove the verifier role from an address
-      * @param account Address to remove role from
-      */
-    function removeValidVerifier(address account) public onlyAdmin {
-        isValidVerifier[account] = false;
+     function isProjectDeveloper(address account) public view returns(bool) {
+        return hasRole(PROJECT_DEVELOPER_ROLE, account);
+    }
+
+    function isVerifier(address account) public view returns(bool) {
+        return hasRole(VERIFIER_ROLE, account);
+    }
+
+    function addProjectDeveloper(address account) public onlyAdmin {
+        grantRole(PROJECT_DEVELOPER_ROLE, account);
+        addressToProjectDevInfo[account];
+    }
+
+    function removeProjectDeveloper(address account) public onlyAdmin {
+        revokeRole(PROJECT_DEVELOPER_ROLE, account);
+    }
+
+    function addVerifier(address account) public onlyAdmin {
+        grantRole(VERIFIER_ROLE, account);
+    }
+
+    function removeVerifier(address account) public onlyAdmin {
+        revokeRole(VERIFIER_ROLE, account);
     }
 
 
@@ -347,8 +359,6 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
      /**
       * @dev submits a new proof to be tracked by the smart contract on chain, if it hits 1000kg, it triggers a minting on the CVCU contract
       * @param stoveID The IoT Cookstove UUID
-      * @param _burnTime Burntime of the stove in seconds
-      * @param _emissionFactor Emission Factor used for the calculation
       * @param _signer Address of verifier
       * @param _to Address of project developer
       * @param _tonsCO2e Total Grams calculated for emission reduction
@@ -358,8 +368,6 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
 
      function submitCarbonProof(
          uint256  stoveID,
-         uint256 _burnTime,
-         uint256 _emissionFactor,
          address _signer,
          address _to,
          uint256 _tonsCO2e,
@@ -371,26 +379,19 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
          require(isValidVerifier[_signer] == true, "Not a valid verifier");
          require(addressToProjectDevInfo[msg.sender].isValidStoveID[stoveID] == true, "Not a valid stoveID");
          require( _tonsCO2e > 0, "gramsCO2e cannot be 0");
-         require( _burnTime > 0, "Burn time cannot be 0");
-         require( _emissionFactor > 0, "emissionFactor cannot be 0");
 
          bool verifyState = verify(_signer, _to, _tonsCO2e, _message, _nonce, signature);
          require(verifyState == true, "Not verified to mint");
 
          stoveProof memory _toBeAddedProof;
-         _toBeAddedProof.burnTime = _burnTime;
-         _toBeAddedProof.emissionFactor = _emissionFactor;
          _toBeAddedProof.tonsCO2e = _tonsCO2e;
 
          addressToProjectDevInfo[msg.sender].stoveUUIDtoStoveProof[stoveID].proofCollection.push(_toBeAddedProof);
 
          isSubmittedBatch[signature] = true;
 
-         emit newProofSubmitted(stoveID,_burnTime, _emissionFactor, _tonsCO2e, msg.sender);
-
          addressToProjectDevInfo[msg.sender].pendingCO2eTons = addressToProjectDevInfo[msg.sender].pendingCO2eTons.add(_tonsCO2e);
 
-         emit newPendingCO2eTons(addressToProjectDevInfo[msg.sender].pendingCO2eTons, msg.sender);
 
      }
 
@@ -404,26 +405,88 @@ contract TonMinter is Initializable, AccessControlUpgradeable {
             require(addressToProjectDevInfo[msg.sender].pendingCO2eTons > 1, "Not enough pendingCO2eTons to mint");
             require(address(CVCUAddress) != address(0x0), "CarbonVCUInterface needs to be set");
 
-            CVCUInterface.mintVCU(creolSuper, cookstoveIPFSURI);
+            CVCUInterface.mintCU(creolSuper);
 
             addressToProjectDevInfo[msg.sender].pendingCO2eTons = addressToProjectDevInfo[msg.sender].pendingCO2eTons.sub(1);
 
-            emit newPendingCO2eTons(addressToProjectDevInfo[msg.sender].pendingCO2eTons, msg.sender);
          }
      }
 
+    function mintEmptyVCU() public onlyProjectDeveloper returns (uint256 tokenID) {
+        _tokenIDs.increment();
+        uint256 newTokenId = _tokenIDs.current();
+        _safeMint(msg.sender, newTokenId);
+        list[newTokenId].status = ConfirmationStatus.Created;
+        emit VCUSMinted(msg.sender, newTokenId);
+        return newTokenId;
+    }
+
+    function testReturn() public view onlyProjectDeveloper returns (uint256) {
+        uint256 testInt = 3;
+        return testInt;
+    }
+
+    function verifyAndUpdate(
+        uint256  stoveID,
+        address _signer,
+        address _to,
+        uint256 _tonsCO2e,
+        string memory _message,
+        uint _nonce,
+        uint256 tokenID,
+        bytes memory signature) public onlyProjectDeveloper {
+
+        require(isSubmittedBatch[signature] == false, "This batch has already been submitted");
+        require(isValidVerifier[_signer] == true, "Not a valid verifier");
+        require(addressToProjectDevInfo[msg.sender].isValidStoveID[stoveID] == true, "Not a valid stoveID");
+        require( _tonsCO2e > 0, "gramsCO2e cannot be 0");
+
+        bool verifyState = verify(_signer, _to, _tonsCO2e, _message, _nonce, signature);
+        require(verifyState == true, "Not verified to mint");
+
+        stoveProof memory _toBeAddedProof;
+        _toBeAddedProof.tonsCO2e = _tonsCO2e;
+
+        addressToProjectDevInfo[msg.sender].stoveUUIDtoStoveProof[stoveID].proofCollection.push(_toBeAddedProof);
+
+        isSubmittedBatch[signature] = true;
+
+        CVCUInterface.updateCU(msg.sender, tokenID);
+
+    }
 
      function setStoveURI(string memory _stoveURI) public onlyProjectDeveloper {
-
          cookstoveIPFSURI = _stoveURI;
-         emit newStoveIPFSURI(cookstoveIPFSURI);
      }
+
       function setTonMinterCVCU(address _CVCU) public onlyAdmin {
 
          CVCUAddress = _CVCU;
          CVCUInterface = CarbonVCUInterface(_CVCU);
          emit newTonMinterCVCU(_CVCU);
      }
+
+    // Interface function
+
+    function getData(
+        uint256 tokenId
+    ) external view override returns(VCUSData memory) {
+        return list[tokenId];
+    }
+
+    // Contract stuff
+
+    function supportsInterface(bytes4 interfaceId)
+    public
+    view
+    virtual
+    override(AccessControlUpgradeable, ERC721EnumerableUpgradeable)
+    returns (bool)
+    {
+        return interfaceId == type(IAccessControlUpgradeable).interfaceId || ERC721Upgradeable.supportsInterface(interfaceId);
+    }
+
+
 
 
 /**

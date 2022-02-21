@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import {Address} from "../components";
 import {Button, Col, Divider, Input, Row} from "antd";
 import {CheckCircleOutlined, CloseCircleOutlined} from "@ant-design/icons";
-import {arrayify} from "@ethersproject/bytes";
+import { ethers } from "ethers";
 
 export default function Admin({
                                    address,
@@ -34,6 +34,21 @@ export default function Admin({
   const [newCheckVerifier, setNewCheckVerifier] = useState(null);
   const [newIsVerifier, setNewIsVerifier] = useState(null);
   const [newCVCUAddress, setNewCVCUAddress] = useState(null);
+  const [newAdminAddress, setNewAdminAddress] = useState(null);
+  const [newMintResult, setNewMintResult] = useState(null);
+
+  let filter = {
+    address: newCVCUAddress,
+    topics: [
+      ethers.utils.id("VCUSMinted(address,uint256)")
+    ]
+  }
+
+  /*
+  localProvider.on(filter, (result) => {
+    console.log(result)
+  })
+   */
 
   return (
     <div>
@@ -56,27 +71,29 @@ export default function Admin({
         <div>
           <Row>
             <Col span={22}>
-              <h2>Set TonMinter CVCU</h2>
+              <h2>Initialize Smart Contract</h2>
               <Input
-                placeholder="CVCU Address"
+                placeholder="Admin address"
                 onChange={e => {
-                  setNewCVCUAddress(e.target.value);
+                  setNewAdminAddress(e.target.value);
+
                 }}
               />
             </Col>
             <Col span={2}>
-              {displayIcon(newCVCUAddress)}
+              {displayIcon(newAdminAddress)}
             </Col>
           </Row>
           <div style={{textAlign: "center"}}>
             <Button
               onClick={async () => {
-                const result = tx(writeContracts.TonMinter.setTonMinterCVCU(newCVCUAddress));
+                const result = tx(writeContracts.TonMinter.initialize(newAdminAddress));
               }}
             >
-              Set
+              Approve
             </Button>
           </div>
+
         </div>
       </div>
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
@@ -122,7 +139,7 @@ export default function Admin({
           <div style={{textAlign: "center"}}>
             <Button
               onClick={async () => {
-                const result = tx(writeContracts.TonMinter.addValidVerifier(newApproveDeveloper));
+                const result = tx(writeContracts.TonMinter.addVerifier(newApproveDeveloper));
               }}
             >
               Approve
@@ -178,7 +195,7 @@ export default function Admin({
           <div style={{textAlign: "center"}}>
             <Button
               onClick={async () => {
-                const result = tx(writeContracts.TonMinter.isValidVerifier(newCheckVerifier));
+                const result = tx(writeContracts.TonMinter.isVerifier(newCheckVerifier));
                 result.then((projectVerifierBool) => {
                   setNewIsVerifier(projectVerifierBool.toString())
                 })
@@ -234,7 +251,7 @@ export default function Admin({
           <div style={{textAlign: "center"}}>
             <Button
               onClick={async () => {
-                const result = tx(writeContracts.TonMinter.removeValidVerifier(newRemoveVerifier));
+                const result = tx(writeContracts.TonMinter.removeVerifier(newRemoveVerifier));
               }}
             >
               Remove
