@@ -168,8 +168,6 @@ function App(props) {
   // keep track of a variable from the contract in the local React state:
   const purpose = useContractReader(readContracts, "YourContract", "purpose");
 
-  const data = useContractReader(readContracts, "Verifier", "data");
-
   /*
   const addressFromENS = useResolveName(mainnetProvider, "austingriffith.eth");
   console.log("🏷 Resolved austingriffith.eth as:",addressFromENS)
@@ -359,7 +357,6 @@ function App(props) {
             tx={tx}
             writeContracts={writeContracts}
             readContracts={readContracts}
-            data={data}
           />
         </Route>
         <Route path="/mint">
@@ -373,7 +370,6 @@ function App(props) {
             tx={tx}
             writeContracts={writeContracts}
             readContracts={readContracts}
-            data={data}
           />
         </Route>
         <Route path="/register">
@@ -387,7 +383,6 @@ function App(props) {
             tx={tx}
             writeContracts={writeContracts}
             readContracts={readContracts}
-            data={data}
           />
         </Route>
         <Route path="/admin">
@@ -401,7 +396,6 @@ function App(props) {
             tx={tx}
             writeContracts={writeContracts}
             readContracts={readContracts}
-            data={data}
           />
         </Route>
         <Route path="/upload">
@@ -415,7 +409,6 @@ function App(props) {
             tx={tx}
             writeContracts={writeContracts}
             readContracts={readContracts}
-            data={data}
           />
         </Route>
         <Route path="/faq">

@@ -78,8 +78,8 @@ ERC721EnumerableUpgradeable
     event stoveIDRemoved(uint256 stoveID);
     event newTonMinterCVCU(address newCVCU);
     event VCUSMinted(address sender, uint256 tokenID);
-    event VCUSUpdated(uint256 tokenID, ConfirmationStatus status);
-    event VCUSStatusUpdated(uint256 tokenID);
+    event VCUSUpdated(uint256 tokenID, string methodology, uint256 _tonsCO2e, uint256 vintageStart, uint256 vintageEnd, string dataLink);
+    event VCUSStatusUpdated(uint256 tokenID, ConfirmationStatus status);
 
 
     /**
@@ -117,7 +117,7 @@ ERC721EnumerableUpgradeable
 
 
     struct projectDeveloperInfo {
-        uint256 pendingCO2eTons;
+        uint256[] tokenIDs;
         mapping (uint256 => stoveProofs) stoveUUIDtoStoveProof;
         mapping (uint256 => bool) isValidStoveID;
     }
@@ -133,7 +133,7 @@ ERC721EnumerableUpgradeable
         stoveProof[] proofCollection;
     }
 
-    mapping (address => projectDeveloperInfo) public addressToProjectDevInfo;
+    mapping (address => projectDeveloperInfo) private addressToProjectDevInfo;
     mapping (address => bool) public isValidVerifier;
     mapping (bytes => bool) public isSubmittedBatch;
 
@@ -262,7 +262,7 @@ ERC721EnumerableUpgradeable
       * @param projectDeveloperAddress Address belonging to a project developer
       */
      function getDeveloperPendingTons(address projectDeveloperAddress) public view returns (uint256 _pendingC02eTons) {
-         return addressToProjectDevInfo[projectDeveloperAddress].pendingCO2eTons;
+         //return addressToProjectDevInfo[projectDeveloperAddress].pendingCO2eTons;
      }
 
     /**
@@ -356,7 +356,65 @@ ERC721EnumerableUpgradeable
     }
 
 
-     /**
+    function mintEmptyVCU() public onlyProjectDeveloper returns (uint256 tokenID) {
+        _tokenIDs.increment();
+        uint256 newTokenId = _tokenIDs.current();
+        _safeMint(msg.sender, newTokenId);
+        list[newTokenId].status = ConfirmationStatus.Created;
+        addressToProjectDevInfo[msg.sender].tokenIDs.push(newTokenId);
+        emit VCUSMinted(msg.sender, newTokenId);
+        return newTokenId;
+    }
+
+    function getTokenIDs(address account) public view returns (uint256[] memory) {
+        return addressToProjectDevInfo[account].tokenIDs;
+    }
+
+    function updateCU(
+        uint256 tokenID,
+        string memory methodology,
+        uint256 _tonsCO2e,
+        uint256 vintageStart,
+        uint256 vintageEnd,
+        string memory dataLink
+) public onlyProjectDeveloper {
+
+        require(
+            ownerOf(tokenID) == _msgSender() || isAdmin(msg.sender),
+            'The NFT can be updated only from owner or admin');
+        require(
+            list[tokenID].status != ConfirmationStatus.Pending,
+            'You can\'t change info of NFT that is under approval');
+        require(
+            list[tokenID].status != ConfirmationStatus.Approved,
+            'You can\'t change info of NFT that is already Approved');
+        require( _tonsCO2e > 0, "tonsCO2e cannot be 0");
+
+        list[tokenID].methodology = methodology;
+        list[tokenID].projectDeveloper = msg.sender;
+        list[tokenID].quantity = _tonsCO2e;
+        list[tokenID].vintageStart = vintageStart;
+        list[tokenID].vintageEnd = vintageEnd;
+        list[tokenID].dataLink = dataLink;
+
+        list[tokenID].status = ConfirmationStatus.Pending;
+
+        emit VCUSUpdated(tokenID, methodology, _tonsCO2e, vintageStart, vintageEnd, dataLink);
+        emit VCUSStatusUpdated(tokenID, ConfirmationStatus.Pending);
+    }
+
+     function setStoveURI(string memory _stoveURI) public onlyProjectDeveloper {
+         cookstoveIPFSURI = _stoveURI;
+     }
+
+      function setTonMinterCVCU(address _CVCU) public onlyAdmin {
+
+         CVCUAddress = _CVCU;
+         CVCUInterface = CarbonVCUInterface(_CVCU);
+         emit newTonMinterCVCU(_CVCU);
+     }
+
+    /**
       * @dev submits a new proof to be tracked by the smart contract on chain, if it hits 1000kg, it triggers a minting on the CVCU contract
       * @param stoveID The IoT Cookstove UUID
       * @param _signer Address of verifier
@@ -366,74 +424,13 @@ ERC721EnumerableUpgradeable
       * @param signature Signature to be verified
       */
 
-     function submitCarbonProof(
-         uint256  stoveID,
-         address _signer,
-         address _to,
-         uint256 _tonsCO2e,
-         string memory _message,
-         uint _nonce,
-         bytes memory signature) public onlyProjectDeveloper {
-
-         require(isSubmittedBatch[signature] == false, "This batch has already been submitted");
-         require(isValidVerifier[_signer] == true, "Not a valid verifier");
-         require(addressToProjectDevInfo[msg.sender].isValidStoveID[stoveID] == true, "Not a valid stoveID");
-         require( _tonsCO2e > 0, "gramsCO2e cannot be 0");
-
-         bool verifyState = verify(_signer, _to, _tonsCO2e, _message, _nonce, signature);
-         require(verifyState == true, "Not verified to mint");
-
-         stoveProof memory _toBeAddedProof;
-         _toBeAddedProof.tonsCO2e = _tonsCO2e;
-
-         addressToProjectDevInfo[msg.sender].stoveUUIDtoStoveProof[stoveID].proofCollection.push(_toBeAddedProof);
-
-         isSubmittedBatch[signature] = true;
-
-         addressToProjectDevInfo[msg.sender].pendingCO2eTons = addressToProjectDevInfo[msg.sender].pendingCO2eTons.add(_tonsCO2e);
-
-
-     }
-
-    /**
-      * @dev Allows caller to mint CVCUs when there is a threshold amount of CO2e in the contract, they are minted to the defined creolSuper address
-      */
-     function mintCVCU(uint256 tonsToMint) public onlyProjectDeveloper {
-        require(tonsToMint > 0, "Tons to mint cannot be 0");
-
-         for (uint i=0; i < tonsToMint; i++){
-            require(addressToProjectDevInfo[msg.sender].pendingCO2eTons > 1, "Not enough pendingCO2eTons to mint");
-            require(address(CVCUAddress) != address(0x0), "CarbonVCUInterface needs to be set");
-
-            CVCUInterface.mintCU(creolSuper);
-
-            addressToProjectDevInfo[msg.sender].pendingCO2eTons = addressToProjectDevInfo[msg.sender].pendingCO2eTons.sub(1);
-
-         }
-     }
-
-    function mintEmptyVCU() public onlyProjectDeveloper returns (uint256 tokenID) {
-        _tokenIDs.increment();
-        uint256 newTokenId = _tokenIDs.current();
-        _safeMint(msg.sender, newTokenId);
-        list[newTokenId].status = ConfirmationStatus.Created;
-        emit VCUSMinted(msg.sender, newTokenId);
-        return newTokenId;
-    }
-
-    function testReturn() public view onlyProjectDeveloper returns (uint256) {
-        uint256 testInt = 3;
-        return testInt;
-    }
-
-    function verifyAndUpdate(
+    function submitCarbonProof(
         uint256  stoveID,
         address _signer,
         address _to,
         uint256 _tonsCO2e,
         string memory _message,
         uint _nonce,
-        uint256 tokenID,
         bytes memory signature) public onlyProjectDeveloper {
 
         require(isSubmittedBatch[signature] == false, "This batch has already been submitted");
@@ -451,20 +448,10 @@ ERC721EnumerableUpgradeable
 
         isSubmittedBatch[signature] = true;
 
-        CVCUInterface.updateCU(msg.sender, tokenID);
+        //addressToProjectDevInfo[msg.sender].pendingCO2eTons = addressToProjectDevInfo[msg.sender].pendingCO2eTons.add(_tonsCO2e);
+
 
     }
-
-     function setStoveURI(string memory _stoveURI) public onlyProjectDeveloper {
-         cookstoveIPFSURI = _stoveURI;
-     }
-
-      function setTonMinterCVCU(address _CVCU) public onlyAdmin {
-
-         CVCUAddress = _CVCU;
-         CVCUInterface = CarbonVCUInterface(_CVCU);
-         emit newTonMinterCVCU(_CVCU);
-     }
 
     // Interface function
 

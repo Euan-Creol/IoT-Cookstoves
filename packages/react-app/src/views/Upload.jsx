@@ -79,7 +79,6 @@ export default function Upload({
   if (newAddress !== null
     && newAmount !== null
     && newMethodology !== null
-    && newStoveID !== null
     && newVintageStart !== null
     && newVintageEnd !== null
     && newArweaveLink !== null) {
@@ -89,44 +88,39 @@ export default function Upload({
     }
   }
 
-  const handleFile = (e) => {
-    const content = e.target.result;
-    //console.log('file content',  content)
-    let workbook = XLSX.read(content, {
-      type: 'binary'
-    });
-    workbook.SheetNames.forEach(function(sheetName) {
-      // Here is your object
-      let XL_row_object = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
-      let json_object = JSON.stringify(XL_row_object);
-      setNewFile(json_object)
+  function handleTokenLoading() {
+    const data = tx(writeContracts.TonMinter.getTokenIDs(address))
+    data.then((data) => {
+      setNewAddressTokens(data)
     })
-    // You can set content in state and show it in render.
   }
 
-  const handleChangeFile = (file) => {
-    let fileData = new FileReader();
-    fileData.onloadend = handleFile;
-    //fileData.readAsText(file);
-    fileData.readAsBinaryString(file)
+  function handleChange(e) {
+    setNewTokenID(e)
+    const data = tx(writeContracts.TonMinter.getData(e))
+    data.then((data) => {
+      setNewTokenData(data)
+    })
   }
+
+  const {Option} = Select;
 
   const { Text } = Typography;
 
   const [newMessage, setNewMessage] = useState(null);
-  const [newFile, setNewFile] = useState(null);
   const [newAddress, setNewAddress] = useState(null);
   const [newAmount, setNewAmount] = useState(null);
   const [newNonce, setNewNonce] = useState(null);
   const [newProjectMethodology, setNewProjectMethodology] = useState(null);
   const [newMethodology, setNewMethodology] = useState(null);
   const [newFullSignature, setNewFullSignature] = useState('');
-  const [newStoveID, setNewStoveID] = useState(null);
-  const [newValidStoveID, setNewValidStoveID] = useState(false);
   const [newVintageStart, setNewVintageStart] = useState(null);
   const [newVintageEnd, setNewVintageEnd] = useState(null);
   const [newArweaveLink, setNewArweaveLink] = useState(null);
+  const [newTokenIDs, setNewTokenIDs] = useState(null);
   const [newTokenID, setNewTokenID] = useState(null);
+  const [newTokenData, setNewTokenData] = useState(null);
+  const [newAddressTokens, setNewAddressTokens] = useState([]);
 
   return (
     <div>
@@ -145,49 +139,111 @@ export default function Upload({
           />
         </div>
       </div>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
+      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
         <div style={{ margin: 8 }}>
           <Row>
-            <Col>
-              <h2>Create empty NFT</h2>
-            </Col>
-            <Col>
-              <button onClick={async() => {
-                const result = tx(writeContracts.TonMinter.mintEmptyVCU())
-                result.then((tokenID) => {
-                  setNewTokenID(tokenID)
-                  console.log(tokenID)
-                })
-              }}>
-                Create
-              </button>
-              <button onClick={async() => {
-                const result = tx(writeContracts.TonMinter.testReturn())
-                result.then((tokenID) => {
-                  console.log(tokenID)
-                })
-              }}>
-                TEst
-              </button>
-            </Col>
+            <h2>Select Existing NFT</h2>
           </Row>
+          <Row>
+            <button onClick={handleTokenLoading}>
+              Load tokens
+            </button>
+          </Row>
+          <Row>
+            <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
+              {newAddressTokens.map((tokenID) =>
+                <Option key={tokenID.toNumber()} value={tokenID.toNumber()}>{tokenID.toNumber()}</Option>
+              )}
+            </Select>
+          </Row>
+          <Row>
+            <h4>OR</h4>
+          </Row>
+          <Row>
+              <h2>Create empty NFT</h2>
+          </Row>
+          <Row>
+            <button onClick={async() => {
+              const result = tx(writeContracts.TonMinter.mintEmptyVCU())
+              result.then(async() => {
+                const tokenIDs = tx(writeContracts.TonMinter.getTokenIDs(address))
+                tokenIDs.then((tokenIDs) => {
+                  setNewTokenIDs(tokenIDs)
+                  setNewTokenID(tokenIDs[tokenIDs.length-1].toNumber())
+                  const data = tx(writeContracts.TonMinter.getData(tokenIDs[tokenIDs.length-1].toNumber()))
+                  data.then((data) => {
+                    setNewTokenData(data)
+                  })
+                })
+              })
+            }}>
+              Create
+            </button>
+          </Row>
+          {newTokenData !== null &&
           <div>
-            <h4>
-              Token ID: {}
-            </h4>
+            <Row>
+              <Divider/>
+            </Row>
+            <div style={{border: "1px solid #cccccc", padding: 16, margin: "auto", marginTop: 32}}>
+              <div style={{margin: 8}}>
+                <Row>
+                  <h2>Token Data</h2>
+                </Row>
+                <Row>
+                  <h4>Token ID: {newTokenID}</h4>
+                </Row>
+                <Row>
+                  <h4>Methodology: {newTokenData.methodology}</h4>
+                </Row>
+                <Row>
+                  <h4>Project Developer: {newTokenData.projectDeveloper}</h4>
+                </Row>
+                <Row>
+                  <h4>Verifier: {newTokenData.verifier}</h4>
+                </Row>
+                <Row>
+                  <h4>Number of Tonnes: {newTokenData.quantity.toNumber()} tCO2e</h4>
+                </Row>
+                <Row>
+                  <h4>Data Link: {newTokenData.dataLink}</h4>
+                </Row>
+                <Row>
+                  <h4>Vintage Start: {newTokenData.vintageStart.toNumber()}</h4>
+                </Row>
+                <Row>
+                  <h4>Vintage End: {newTokenData.vintageEnd.toNumber()}</h4>
+                </Row>
+                <Row>
+                  <h4>Verifier Signature: {newTokenData.verifierSignature}</h4>
+                </Row>
+                <Row>
+                  <h4>Status: {newTokenData.status}</h4>
+                </Row>
+              </div>
+            </div>
           </div>
+          }
         </div>
       </div>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
-        <div style={{ margin: 8 }}>
+      {newTokenData !== null &&
+      <div style={{
+        border: "1px solid #cccccc",
+        padding: 16,
+        width: 550,
+        margin: "auto",
+        marginTop: 32,
+        textAlign: "left"
+      }}>
+        <div style={{margin: 8}}>
           <Row>
             <Col span={22}>
               <Space direction="vertical">
                 <Space wrap>
-                  <Dropdown overlay={projectDeveloperDropdown} click placement="bottomCenter" >
+                  <Dropdown overlay={projectDeveloperDropdown} click placement="bottomCenter">
                     <h2>
-                      <a className="ant-dropdown-link" style={{ color: '#cccccc' }} onClick={e => e.preventDefault()}>
-                        Project Developer <DownOutlined />
+                      <a className="ant-dropdown-link" style={{color: '#cccccc'}} onClick={e => e.preventDefault()}>
+                        Project Developer <DownOutlined/>
                       </a>
                     </h2>
                   </Dropdown>
@@ -199,15 +255,15 @@ export default function Upload({
               {displayIcon(newAddress)}
             </Col>
           </Row>
-          <Divider />
+          <Divider/>
           <Row>
             <Col span={22}>
               <Space direction="vertical">
                 <Space wrap>
-                  <Dropdown overlay={projectMethodologyDropdown} click placement="bottomCenter" >
+                  <Dropdown overlay={projectMethodologyDropdown} click placement="bottomCenter">
                     <h2>
-                      <a className="ant-dropdown-link" style={{ color: '#cccccc' }} onClick={e => e.preventDefault()}>
-                        Project Methodology <DownOutlined />
+                      <a className="ant-dropdown-link" style={{color: '#cccccc'}} onClick={e => e.preventDefault()}>
+                        Project Methodology <DownOutlined/>
                       </a>
                     </h2>
                   </Dropdown>
@@ -219,17 +275,17 @@ export default function Upload({
               {displayIcon(newProjectMethodology)}
             </Col>
           </Row>
-          <Divider />
+          <Divider/>
           {newProjectMethodology === "GS-Cookstoves" && (
             <div>
               <Row>
                 <Col span={22}>
                   <Space direction="vertical">
                     <Space wrap>
-                      <Dropdown overlay={methodologyDropdown} click placement="bottomCenter" >
+                      <Dropdown overlay={methodologyDropdown} click placement="bottomCenter">
                         <h2>
-                          <a className="ant-dropdown-link" style={{ color: '#cccccc' }} onClick={e => e.preventDefault()}>
-                            Methodology <DownOutlined />
+                          <a className="ant-dropdown-link" style={{color: '#cccccc'}} onClick={e => e.preventDefault()}>
+                            Methodology <DownOutlined/>
                           </a>
                         </h2>
                       </Dropdown>
@@ -241,35 +297,7 @@ export default function Upload({
                   {displayIcon(newMethodology)}
                 </Col>
               </Row>
-              <Divider />
-              <Row>
-                <Col span={22}>
-                  <h2>Stove ID</h2>
-                  <Input
-                    onChange={e => {
-                      const stoveID = parseInt(e.target.value)
-                      setNewStoveID(stoveID)
-                      if(!isNaN(stoveID)) {
-                        const result = tx(writeContracts.TonMinter.getStoveID(parseInt(stoveID)))
-                        result.then((stoveIDResult) => {
-                          console.log(stoveIDResult)
-                          setNewValidStoveID(stoveIDResult)
-                        })
-                      } else {
-                        setNewValidStoveID(false)
-                      }
-                    }}
-                  />
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newStoveID)}
-                </Col>
-              </Row>
-            </div>
-          )}
-          {newValidStoveID && (
-          <div>
-            <Divider />
+              <Divider/>
               <Row>
                 <Col span={22}>
                   <h2>Amount of Carbon (tons CO2e)</h2>
@@ -283,245 +311,233 @@ export default function Upload({
                   {displayIcon(newAmount)}
                 </Col>
               </Row>
-            <Divider />
-            <Row>
-              <Col span={22}>
-                <h2>Vintage Start</h2>
-                <Calendar
-                  fullscreen={false}
-                  headerRender={({ value, type, onChange, onTypeChange }) => {
-                    const start = 0;
-                    const end = 12;
-                    const monthOptions = [];
+              <Divider/>
+              <Row>
+                <Col span={22}>
+                  <h2>Vintage Start</h2>
+                  <Calendar
+                    fullscreen={false}
+                    headerRender={({value, type, onChange, onTypeChange}) => {
+                      const start = 0;
+                      const end = 12;
+                      const monthOptions = [];
 
-                    const current = value.clone();
-                    const localeData = value.localeData();
-                    const months = [];
-                    for (let i = 0; i < 12; i++) {
-                      current.month(i);
-                      months.push(localeData.monthsShort(current));
-                    }
+                      const current = value.clone();
+                      const localeData = value.localeData();
+                      const months = [];
+                      for (let i = 0; i < 12; i++) {
+                        current.month(i);
+                        months.push(localeData.monthsShort(current));
+                      }
 
-                    for (let index = start; index < end; index++) {
-                      monthOptions.push(
-                        <Select.Option className="month-item" key={`${index}`}>
-                          {months[index]}
-                        </Select.Option>,
+                      for (let index = start; index < end; index++) {
+                        monthOptions.push(
+                          <Select.Option className="month-item" key={`${index}`}>
+                            {months[index]}
+                          </Select.Option>,
+                        );
+                      }
+                      const month = value.month();
+
+                      const year = value.year();
+                      const options = [];
+                      for (let i = year - 10; i < year + 10; i += 1) {
+                        options.push(
+                          <Select.Option key={i} value={i} className="year-item">
+                            {i}
+                          </Select.Option>,
+                        );
+                      }
+                      return (
+                        <div style={{padding: 8}}>
+                          <Row gutter={8}>
+                            <Col>
+                              <Radio.Group size="small" onChange={e => onTypeChange(e.target.value)} value={type}>
+                                <Radio.Button value="month">Month</Radio.Button>
+                                <Radio.Button value="year">Year</Radio.Button>
+                              </Radio.Group>
+                            </Col>
+                            <Col>
+                              <Select
+                                size="small"
+                                dropdownMatchSelectWidth={false}
+                                className="my-year-select"
+                                onChange={newYear => {
+                                  const now = value.clone().year(newYear);
+                                  onChange(now);
+                                }}
+                                value={String(year)}
+                              >
+                                {options}
+                              </Select>
+                            </Col>
+                            <Col>
+                              <Select
+                                size="small"
+                                dropdownMatchSelectWidth={false}
+                                value={String(month)}
+                                onChange={selectedMonth => {
+                                  const newValue = value.clone();
+                                  newValue.month(parseInt(selectedMonth, 10));
+                                  onChange(newValue);
+                                }}
+                              >
+                                {monthOptions}
+                              </Select>
+                            </Col>
+                            <Col>
+                              <button hidden={true} onClick={
+                                setNewVintageStart(value.unix())
+                              }>
+                                Submit
+                              </button>
+                            </Col>
+                          </Row>
+                        </div>
                       );
-                    }
-                    const month = value.month();
+                    }}
+                  />
+                </Col>
+                <Col span={2}>
+                  {displayIcon(newVintageStart)}
+                </Col>
+              </Row>
+              <Divider/>
+              <Row>
+                <Col span={22}>
+                  <h2>Vintage End</h2>
+                  <Calendar
+                    fullscreen={false}
+                    headerRender={({value, type, onChange, onTypeChange}) => {
+                      const start = 0;
+                      const end = 12;
+                      const monthOptions = [];
 
-                    const year = value.year();
-                    const options = [];
-                    for (let i = year - 10; i < year + 10; i += 1) {
-                      options.push(
-                        <Select.Option key={i} value={i} className="year-item">
-                          {i}
-                        </Select.Option>,
+                      const current = value.clone();
+                      const localeData = value.localeData();
+                      const months = [];
+                      for (let i = 0; i < 12; i++) {
+                        current.month(i);
+                        months.push(localeData.monthsShort(current));
+                      }
+
+                      for (let index = start; index < end; index++) {
+                        monthOptions.push(
+                          <Select.Option className="month-item" key={`${index}`}>
+                            {months[index]}
+                          </Select.Option>,
+                        );
+                      }
+                      const month = value.month();
+
+                      const year = value.year();
+                      const options = [];
+                      for (let i = year - 10; i < year + 10; i += 1) {
+                        options.push(
+                          <Select.Option key={i} value={i} className="year-item">
+                            {i}
+                          </Select.Option>,
+                        );
+                      }
+                      return (
+                        <div style={{padding: 8}}>
+                          <Row gutter={8}>
+                            <Col>
+                              <Radio.Group size="small" onChange={e => onTypeChange(e.target.value)} value={type}>
+                                <Radio.Button value="month">Month</Radio.Button>
+                                <Radio.Button value="year">Year</Radio.Button>
+                              </Radio.Group>
+                            </Col>
+                            <Col>
+                              <Select
+                                size="small"
+                                dropdownMatchSelectWidth={false}
+                                className="my-year-select"
+                                onChange={newYear => {
+                                  const now = value.clone().year(newYear);
+                                  onChange(now);
+                                }}
+                                value={String(year)}
+                              >
+                                {options}
+                              </Select>
+                            </Col>
+                            <Col>
+                              <Select
+                                size="small"
+                                dropdownMatchSelectWidth={false}
+                                value={String(month)}
+                                onChange={selectedMonth => {
+                                  const newValue = value.clone();
+                                  newValue.month(parseInt(selectedMonth, 10));
+                                  onChange(newValue);
+                                }}
+                              >
+                                {monthOptions}
+                              </Select>
+                            </Col>
+                            <Col>
+                              <button hidden={true} onClick={
+                                setNewVintageEnd(value.unix())
+                              }>
+                                Submit
+                              </button>
+                            </Col>
+                          </Row>
+                        </div>
                       );
-                    }
-                    return (
-                      <div style={{ padding: 8 }}>
-                        <Row gutter={8}>
-                          <Col>
-                            <Radio.Group size="small" onChange={e => onTypeChange(e.target.value)} value={type}>
-                              <Radio.Button value="month">Month</Radio.Button>
-                              <Radio.Button value="year">Year</Radio.Button>
-                            </Radio.Group>
-                          </Col>
-                          <Col>
-                            <Select
-                              size="small"
-                              dropdownMatchSelectWidth={false}
-                              className="my-year-select"
-                              onChange={newYear => {
-                                const now = value.clone().year(newYear);
-                                onChange(now);
-                              }}
-                              value={String(year)}
-                            >
-                              {options}
-                            </Select>
-                          </Col>
-                          <Col>
-                            <Select
-                              size="small"
-                              dropdownMatchSelectWidth={false}
-                              value={String(month)}
-                              onChange={selectedMonth => {
-                                const newValue = value.clone();
-                                newValue.month(parseInt(selectedMonth, 10));
-                                onChange(newValue);
-                              }}
-                            >
-                              {monthOptions}
-                            </Select>
-                          </Col>
-                          <Col>
-                            <button hidden={true} onClick={setNewVintageStart(value)}>
-                              Submit
-                            </button>
-                          </Col>
-                        </Row>
-                      </div>
-                    );
+                    }}
+                  />
+                </Col>
+                <Col span={2}>
+                  {displayIcon(newVintageEnd)}
+                </Col>
+              </Row>
+              <Divider/>
+              <Row>
+                <Col span={22}>
+                  <h2>Arweave Link</h2>
+                  <Input
+                    placeholder="Arweave Link"
+                    onChange={e => {
+                      setNewArweaveLink(e.target.value);
+                    }}
+                  />
+                </Col>
+                <Col span={2}>
+                  {displayIcon(newArweaveLink)}
+                </Col>
+              </Row>
+              <Row>
+                <Col span={22}>
+                  <div>
+                    How to upload to Arweave >
+                  </div>
+                </Col>
+                <Col span={2}/>
+              </Row>
+              <Divider/>
+              <div style={{textAlign: "center"}}>
+                <Button
+                  disabled={enableDataSubmit()}
+                  onClick={async () => {
+                    const result = tx(writeContracts.TonMinter.updateCU(newTokenID, newProjectMethodology, newAmount, newVintageStart, newVintageEnd, newArweaveLink));
+                    result.then(() => {
+                      data = tx(writeContracts.TonMinter.getData(newTokenID))
+                      data.then((data) => {
+                        setNewTokenData(data)
+                      })
+                    })
                   }}
-                />
-              </Col>
-              <Col span={2}>
-                {displayIcon(newVintageStart)}
-              </Col>
-            </Row>
-            <Divider />
-            <Row>
-              <Col span={22}>
-                <h2>Vintage End</h2>
-                <Calendar
-                  fullscreen={false}
-                  headerRender={({ value, type, onChange, onTypeChange }) => {
-                    const start = 0;
-                    const end = 12;
-                    const monthOptions = [];
-
-                    const current = value.clone();
-                    const localeData = value.localeData();
-                    const months = [];
-                    for (let i = 0; i < 12; i++) {
-                      current.month(i);
-                      months.push(localeData.monthsShort(current));
-                    }
-
-                    for (let index = start; index < end; index++) {
-                      monthOptions.push(
-                        <Select.Option className="month-item" key={`${index}`}>
-                          {months[index]}
-                        </Select.Option>,
-                      );
-                    }
-                    const month = value.month();
-
-                    const year = value.year();
-                    const options = [];
-                    for (let i = year - 10; i < year + 10; i += 1) {
-                      options.push(
-                        <Select.Option key={i} value={i} className="year-item">
-                          {i}
-                        </Select.Option>,
-                      );
-                    }
-                    return (
-                      <div style={{ padding: 8 }}>
-                        <Row gutter={8}>
-                          <Col>
-                            <Radio.Group size="small" onChange={e => onTypeChange(e.target.value)} value={type}>
-                              <Radio.Button value="month">Month</Radio.Button>
-                              <Radio.Button value="year">Year</Radio.Button>
-                            </Radio.Group>
-                          </Col>
-                          <Col>
-                            <Select
-                              size="small"
-                              dropdownMatchSelectWidth={false}
-                              className="my-year-select"
-                              onChange={newYear => {
-                                const now = value.clone().year(newYear);
-                                onChange(now);
-                              }}
-                              value={String(year)}
-                            >
-                              {options}
-                            </Select>
-                          </Col>
-                          <Col>
-                            <Select
-                              size="small"
-                              dropdownMatchSelectWidth={false}
-                              value={String(month)}
-                              onChange={selectedMonth => {
-                                const newValue = value.clone();
-                                newValue.month(parseInt(selectedMonth, 10));
-                                onChange(newValue);
-                              }}
-                            >
-                              {monthOptions}
-                            </Select>
-                          </Col>
-                          <Col>
-                            <button hidden={true} onClick={setNewVintageEnd(value)}>
-                              Submit
-                            </button>
-                          </Col>
-                        </Row>
-                      </div>
-                    );
-                  }}
-                />
-              </Col>
-              <Col span={2}>
-                {displayIcon(newVintageEnd)}
-              </Col>
-            </Row>
-            <Divider />
-            <Row>
-              <Col span={22}>
-                <h2>Arweave Link</h2>
-                <Input
-                  placeholder="Arweave Link"
-                  onChange={e => {
-                    setNewArweaveLink(e.target.value);
-                  }}
-                />
-              </Col>
-              <Col span={2}>
-                {displayIcon(newArweaveLink)}
-              </Col>
-            </Row>
-            <Row>
-              <Col span={22}>
-                <div>
-                  How to upload to Arweave >
-                </div>
-              </Col>
-              <Col span={2}/>
-            </Row>
-            <Divider />
-            <div style={{textAlign: "center"}}>
-              <Button
-                disabled={enableDataSubmit()}
-                onClick={async () => {
-                  const tokenMetadata = {
-                    "Project Methodology":newProjectMethodology,
-                    "Methodology":newMethodology,
-                    "Number of Tonnes":newAmount,
-                    "Vintage Start":newVintageStart,
-                    "Vintage End":newVintageEnd,
-                    "Project Developer":address,
-                    "Arweave Link":newArweaveLink
-                  }
-                  const newNonce = 1;
-                  setNewMessage(tokenMetadata)
-                  setNewNonce(newNonce)
-                  //Hash the message
-                  const result = tx(writeContracts.TonMinter.mintCU(newAddress, parseInt(newAmount), tokenMetadata, parseInt(newNonce)));
-                }}
-              >
-                Sign data
-              </Button>
-              <div>
-                <Text copyable={{ text: newFullSignature }}>
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {newFullSignature.slice(0,5) + '...' + newFullSignature.slice((newFullSignature.length)-5,newFullSignature.length)}
-                  </a>
-                </Text>
+                >
+                  Upload
+                </Button>
               </div>
             </div>
-          </div>
           )}
         </div>
       </div>
+      }
     </div>
   )
 }

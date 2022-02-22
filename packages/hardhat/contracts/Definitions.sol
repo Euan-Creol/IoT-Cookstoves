@@ -5,7 +5,7 @@
 pragma solidity ^0.8.0;
 
 struct VCUSData {
-    string Methodology;
+    string methodology;
     address projectDeveloper;
     address verifier;
     uint256 quantity;
