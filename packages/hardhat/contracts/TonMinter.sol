@@ -196,7 +196,7 @@ ERC721EnumerableUpgradeable
 
     /**
       * @dev check whether an account has admin role
-      * @param account Address to check
+      * @param _address Address to check
       */
      function isAdmin(address _address) public virtual view returns (bool) {
          return hasRole(DEFAULT_ADMIN_ROLE, _address);
@@ -377,8 +377,8 @@ ERC721EnumerableUpgradeable
         return newTokenID;
     }
 
-    function getTokenIDs(address account) public view returns (uint256[] memory) {
-        return addressToProjectDevInfo[account].tokenIDs;
+    function getTokenIDs(address _address) public view returns (uint256[] memory) {
+        return addressToProjectDevInfo[_address].tokenIDs;
     }
 
     function updateCU(

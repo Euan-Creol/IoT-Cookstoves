@@ -29,7 +29,7 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph, Verify, Mint, FAQs, Register, Admin, Upload, Check } from "./views";
+import { Home, ExampleUI, Hints, Subgraph, Verify, Mint, FAQs, Register, Admin, Upload, Check, Actions } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
@@ -267,6 +267,9 @@ function App(props) {
         <Menu.Item key="/check">
           <Link to="/check">Check</Link>
         </Menu.Item>
+        <Menu.Item key="/actions">
+          <Link to="/Actions">Actions</Link>
+        </Menu.Item>
       </Menu>
 
       <Switch>
@@ -410,6 +413,19 @@ function App(props) {
         </Route>
         <Route path="/check">
           <Check
+            address={address}
+            userSigner={userSigner}
+            mainnetProvider={mainnetProvider}
+            localProvider={localProvider}
+            yourLocalBalance={yourLocalBalance}
+            price={price}
+            tx={tx}
+            writeContracts={writeContracts}
+            readContracts={readContracts}
+          />
+        </Route>
+        <Route path="/actions">
+          <Actions
             address={address}
             userSigner={userSigner}
             mainnetProvider={mainnetProvider}

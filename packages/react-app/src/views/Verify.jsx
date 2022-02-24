@@ -98,19 +98,6 @@ export default function Verify({
     })
   }
 
-  function projectStatusDisplay(status) {
-    switch (status) {
-      case 0:
-        return <h3>Created</h3>
-      case 1:
-        return <h3 style={{color: 'orange'}}>Pending</h3>
-      case 2:
-        return <h3 style={{color: 'green'}}>Approved</h3>
-      case 3:
-        return <h3 style={{color: 'red'}}>Rejected</h3>
-    }
-  }
-
   const {Option} = Select;
 
   const { Text } = Typography;
