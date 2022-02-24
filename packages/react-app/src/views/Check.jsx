@@ -9,18 +9,18 @@ import XLSX from 'xlsx';
 import { JsonToTable } from "react-json-to-table";
 import NFTDisplay from "../components/NFTDisplay";
 
-export default function Verify({
-  address,
-  userSigner,
-  mainnetProvider,
-  localProvider,
-  yourLocalBalance,
-  price,
-  tx,
-  readContracts,
-  writeContracts,
-  data
-}) {
+export default function Check({
+                                 address,
+                                 userSigner,
+                                 mainnetProvider,
+                                 localProvider,
+                                 yourLocalBalance,
+                                 price,
+                                 tx,
+                                 readContracts,
+                                 writeContracts,
+                                 data
+                               }) {
 
   //TO-DO change to actual wallets
   const ECSWallet = '0x55C9354F716188d3C937FC3C1569685B740bC8e3' //Wallet.createRandom()
@@ -71,12 +71,12 @@ export default function Verify({
   }
 
   function enableDataSubmit() {
-  if (newAddress !== null
-    && newAmount !== null
-    && newProjectMethodology !== null
-    && newVintageStart !== null
-    && newVintageEnd !== null
-    && newArweaveLink !== null) {
+    if (newAddress !== null
+      && newAmount !== null
+      && newProjectMethodology !== null
+      && newVintageStart !== null
+      && newVintageEnd !== null
+      && newArweaveLink !== null) {
       return false
     } else {
       return true
@@ -116,8 +116,8 @@ export default function Verify({
   const { Text } = Typography;
 
   const [newMessage, setNewMessage] = useState(null);
-  const [newFile, setNewFile] = useState(null);
   const [newAddress, setNewAddress] = useState(null);
+  const [newVerifier, setNewVerifier] = useState(null);
   const [newAmount, setNewAmount] = useState(null);
   const [newNonce, setNewNonce] = useState(null);
   const [newProjectMethodology, setNewProjectMethodology] = useState(null);
@@ -132,10 +132,12 @@ export default function Verify({
   const [newTokenID, setNewTokenID] = useState(null);
   const [newTokenData, setNewTokenData] = useState(null);
   const [newAddressTokens, setNewAddressTokens] = useState(null);
+  const [newVerifierSignature, setNewVerifierSignature] = useState(null);
+  const [newVerifyResult, setNewVerifyResult] = useState(null);
 
   return (
     <div>
-      <h1>Verify</h1>
+      <h1>Check</h1>
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
         <div>
           Your Address:
@@ -174,30 +176,30 @@ export default function Verify({
         </div>
       </div>
       {newAddressTokens !== null && (
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-        <div style={{ margin: 8 }}>
-          <Row>
-            <h2>Select Container</h2>
-          </Row>
-          <Row>
-            <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
-              {newAddressTokens.map((tokenID) =>
-                <Option key={tokenID.toNumber()} value={tokenID.toNumber()}>{tokenID.toNumber()}</Option>
-              )}
-            </Select>
-          </Row>
-          {newTokenData !== null &&
-          <div>
+        <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
+          <div style={{ margin: 8 }}>
             <Row>
-              <Divider/>
+              <h2>Select Existing Container</h2>
             </Row>
+            <Row>
+              <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
+                {newAddressTokens.map((tokenID) =>
+                  <Option key={tokenID.toNumber()} value={tokenID.toNumber()}>{tokenID.toNumber()}</Option>
+                )}
+              </Select>
+            </Row>
+            {newTokenData !== null &&
             <div>
-              <NFTDisplay tokenID={newTokenID} tokenData={newTokenData}/>
+              <Row>
+                <Divider/>
+              </Row>
+              <div>
+                <NFTDisplay tokenID={newTokenID} tokenData={newTokenData}/>
+              </div>
             </div>
+            }
           </div>
-          }
         </div>
-      </div>
       )}
       {newTokenData !== null &&
       <div style={{
@@ -231,6 +233,20 @@ export default function Verify({
           <Divider/>
           {newProjectMethodology === "GS-Cookstoves" && (
             <div>
+              <Row>
+                <Col span={22}>
+                  <h2>Verifier</h2>
+                  <Input
+                    onChange={e => {
+                      setNewVerifier(e.target.value);
+                    }}
+                  />
+                </Col>
+                <Col span={2}>
+                  {displayIcon(newVerifier)}
+                </Col>
+              </Row>
+              <Divider/>
               <Row>
                 <Col span={22}>
                   <h2>Amount of Carbon (tons CO2e)</h2>
@@ -292,6 +308,21 @@ export default function Verify({
                 <Col span={2}/>
               </Row>
               <Divider/>
+              <Row>
+                <Col span={22}>
+                  <h2>Signature</h2>
+                  <Input
+                    placeholder="Verifier's Signature"
+                    onChange={e => {
+                      setNewVerifierSignature(e.target.value);
+                    }}
+                  />
+                </Col>
+                <Col span={2}>
+                  {displayIcon(newVerifierSignature)}
+                </Col>
+              </Row>
+              <Divider/>
               <div style={{textAlign: "center"}}>
                 <Button
                   disabled={enableDataSubmit()}
@@ -299,7 +330,7 @@ export default function Verify({
                     const tokenMetadata = {
                       "Project Methodology": newProjectMethodology,
                       "Project Developer": newAddress,
-                      "Verifier": address,
+                      "Verifier": newVerifier,
                       "Number of Tonnes": newAmount,
                       "Vintage Start": newVintageStart,
                       "Vintage End": newVintageEnd,
@@ -309,54 +340,17 @@ export default function Verify({
                     setNewMessage(tokenMetadata)
                     setNewNonce(newNonce)
                     //Hash the message
-                    const result = tx(writeContracts.TonMinter.getMessageHash(newAddress, parseInt(newAmount), tokenMetadata, parseInt(newNonce)));
-                    setNewMessageHash(await result)
-                    result.then((messageHash) => {
-                      //Sign the message hash
-                      let signPromise = userSigner.signMessage(arrayify(messageHash))
-                      signPromise.then((signature) => {
-                        setNewFullSignature(signature)
-                        const approval = tx(writeContracts.TonMinter.approveCU(newTokenID, newAddress, parseInt(newAmount), tokenMetadata, parseInt(newNonce), signature))
-                        data = tx(writeContracts.TonMinter.getData(newTokenID))
-                        data.then((data) => {
-                          setNewTokenData(data)
-                        })
-                      })
+                    const verify = tx(writeContracts.TonMinter.verify(newVerifier, newAddress, newAmount, newMessage, newNonce, newVerifierSignature))
+                    verify.then((result) => {
+                      if (typeof result == "boolean"){
+                        setNewVerifyResult(result.toString())
+                      }
                     })
                   }}
                 >
-                  Approve
+                  Check
                 </Button>
-              </div>
-              <h4>OR</h4>
-              <div style={{textAlign: "center"}}>
-                <Button
-                  disabled={enableDataSubmit()}
-                  onClick={async () => {
-                    const tokenMetadata = {
-                      "Project Methodology": newProjectMethodology,
-                      "Project Developer": newAddress,
-                      "Verifier": address,
-                      "Number of Tonnes": newAmount,
-                      "Vintage Start": newVintageStart,
-                      "Vintage End": newVintageEnd,
-                      "Arweave Link": newArweaveLink
-                    }
-                    const newNonce = 1;
-                    setNewMessage(tokenMetadata)
-                    setNewNonce(newNonce)
-                    //Hash the message
-                    const result = tx(writeContracts.TonMinter.rejectCU(newTokenID))
-                    result.then(() => {
-                      data = tx(writeContracts.TonMinter.getData(newTokenID))
-                      data.then((data) => {
-                        setNewTokenData(data)
-                      })
-                    })
-                  }}
-                >
-                  Reject
-                </Button>
+                <h3>Result: {newVerifyResult}</h3>
               </div>
             </div>
           )}

@@ -41,6 +41,8 @@ import "./Interfaces/IContractNFT.sol";
 import "./Definitions.sol";
 import "./Interfaces/CarbonVCUInterface.sol";
 import "hardhat/console.sol";
+import "./BokkyPooBahsDateTimeLibrary.sol";
+
 
 /*
   _____            _                  _
@@ -80,6 +82,8 @@ ERC721EnumerableUpgradeable
     event VCUSMinted(address sender, uint256 tokenID);
     event VCUSUpdated(uint256 tokenID, string methodology, uint256 _tonsCO2e, uint256 vintageStart, uint256 vintageEnd, string dataLink);
     event VCUSStatusUpdated(uint256 tokenID, ConfirmationStatus status);
+    event VCUSMetaDataUpdated(uint256 tokenId, string url);
+
 
 
     /**
@@ -139,6 +143,8 @@ ERC721EnumerableUpgradeable
 
     mapping(uint256 => VCUSData) public list;
 
+    mapping(uint256 => string) private _tokenURIs;
+
 
     /**
      *   __  __           _ _  __ _
@@ -192,33 +198,38 @@ ERC721EnumerableUpgradeable
       * @dev check whether an account has admin role
       * @param account Address to check
       */
-     function isAdmin(address account) public virtual view returns (bool) {
-         return hasRole(DEFAULT_ADMIN_ROLE, account);
+     function isAdmin(address _address) public virtual view returns (bool) {
+         return hasRole(DEFAULT_ADMIN_ROLE, _address);
     }
 
-     function isProjectDeveloper(address account) public view returns(bool) {
-        return hasRole(PROJECT_DEVELOPER_ROLE, account);
+     function isProjectDeveloper(address _address) public view returns(bool) {
+        return hasRole(PROJECT_DEVELOPER_ROLE, _address);
     }
 
-    function isVerifier(address account) public view returns(bool) {
-        return hasRole(VERIFIER_ROLE, account);
+    function isVerifier(address _address) public view returns(bool) {
+        return hasRole(VERIFIER_ROLE, _address);
     }
 
-    function addProjectDeveloper(address account) public onlyAdmin {
-        grantRole(PROJECT_DEVELOPER_ROLE, account);
-        addressToProjectDevInfo[account];
+    function changeAdmin(address _address) public onlyAdmin {
+        grantRole(DEFAULT_ADMIN_ROLE, _address);
+        revokeRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    function removeProjectDeveloper(address account) public onlyAdmin {
-        revokeRole(PROJECT_DEVELOPER_ROLE, account);
+    function addProjectDeveloper(address _address) public onlyAdmin {
+        grantRole(PROJECT_DEVELOPER_ROLE, _address);
+        addressToProjectDevInfo[_address];
     }
 
-    function addVerifier(address account) public onlyAdmin {
-        grantRole(VERIFIER_ROLE, account);
+    function removeProjectDeveloper(address _address) public onlyAdmin {
+        revokeRole(PROJECT_DEVELOPER_ROLE, _address);
     }
 
-    function removeVerifier(address account) public onlyAdmin {
-        revokeRole(VERIFIER_ROLE, account);
+    function addVerifier(address _address) public onlyAdmin {
+        grantRole(VERIFIER_ROLE, _address);
+    }
+
+    function removeVerifier(address _address) public onlyAdmin {
+        revokeRole(VERIFIER_ROLE, _address);
     }
 
 
@@ -358,12 +369,12 @@ ERC721EnumerableUpgradeable
 
     function mintEmptyVCU() public onlyProjectDeveloper returns (uint256 tokenID) {
         _tokenIDs.increment();
-        uint256 newTokenId = _tokenIDs.current();
-        _safeMint(msg.sender, newTokenId);
-        list[newTokenId].status = ConfirmationStatus.Created;
-        addressToProjectDevInfo[msg.sender].tokenIDs.push(newTokenId);
-        emit VCUSMinted(msg.sender, newTokenId);
-        return newTokenId;
+        uint256 newTokenID = _tokenIDs.current();
+        _safeMint(msg.sender, newTokenID);
+        list[newTokenID].status = ConfirmationStatus.Created;
+        addressToProjectDevInfo[msg.sender].tokenIDs.push(newTokenID);
+        emit VCUSMinted(msg.sender, newTokenID);
+        return newTokenID;
     }
 
     function getTokenIDs(address account) public view returns (uint256[] memory) {
@@ -390,9 +401,12 @@ ERC721EnumerableUpgradeable
             'You can\'t change info of NFT that is already Approved');
         require( _tonsCO2e > 0, "tonsCO2e cannot be 0");
 
+        uint256 vintage = BokkyPooBahsDateTimeLibrary.getYear(vintageStart);
+
         list[tokenID].methodology = methodology;
         list[tokenID].projectDeveloper = msg.sender;
         list[tokenID].quantity = _tonsCO2e;
+        list[tokenID].vintage = vintage;
         list[tokenID].vintageStart = vintageStart;
         list[tokenID].vintageEnd = vintageEnd;
         list[tokenID].dataLink = dataLink;
@@ -407,58 +421,129 @@ ERC721EnumerableUpgradeable
          cookstoveIPFSURI = _stoveURI;
      }
 
-      function setTonMinterCVCU(address _CVCU) public onlyAdmin {
+    function resetCU(
+        uint256 tokenId
+    ) external virtual onlyAdmin {
 
-         CVCUAddress = _CVCU;
-         CVCUInterface = CarbonVCUInterface(_CVCU);
-         emit newTonMinterCVCU(_CVCU);
-     }
+        require(
+            _exists(tokenId),
+            'ERC721: token not exists'
+        );
 
-    /**
-      * @dev submits a new proof to be tracked by the smart contract on chain, if it hits 1000kg, it triggers a minting on the CVCU contract
-      * @param stoveID The IoT Cookstove UUID
-      * @param _signer Address of verifier
-      * @param _to Address of project developer
-      * @param _tonsCO2e Total Grams calculated for emission reduction
-      * @param _message Hashed supporting data
-      * @param signature Signature to be verified
-      */
+        require(
+            list[tokenId].status != ConfirmationStatus.Approved,
+            'This VCUs is already approved'
+        );
 
-    function submitCarbonProof(
-        uint256  stoveID,
-        address _signer,
-        address _to,
+        _setTokenURI(tokenId,'');
+        list[tokenId].status = ConfirmationStatus.Created;
+        emit VCUSStatusUpdated(tokenId, ConfirmationStatus.Created);
+
+    }
+
+    function approveCU(
+        uint256 tokenID,
+        address projectDeveloper,
         uint256 _tonsCO2e,
-        string memory _message,
+        string memory tokenMetadata,
         uint _nonce,
-        bytes memory signature) public onlyProjectDeveloper {
+        bytes memory signature
+    ) external virtual onlyVerifier {
+
+        require(
+            _exists(tokenID),
+            'ERC721: token not exists'
+        );
+
+        require(_tonsCO2e > 0, 'Amount of carbon must be greater than zero');
+
+
+        require(
+            list[tokenID].status != ConfirmationStatus.Approved,
+            'This VCUs is already approved'
+        );
+
+        require(
+            list[tokenID].status != ConfirmationStatus.Created || list[tokenID].status != ConfirmationStatus.Rejected,
+            'This VCUs is not yet filled with information'
+        );
 
         require(isSubmittedBatch[signature] == false, "This batch has already been submitted");
-        require(isValidVerifier[_signer] == true, "Not a valid verifier");
-        require(addressToProjectDevInfo[msg.sender].isValidStoveID[stoveID] == true, "Not a valid stoveID");
-        require( _tonsCO2e > 0, "gramsCO2e cannot be 0");
 
-        bool verifyState = verify(_signer, _to, _tonsCO2e, _message, _nonce, signature);
+        bool verifyState = verify(msg.sender, projectDeveloper, _tonsCO2e, tokenMetadata, _nonce, signature);
         require(verifyState == true, "Not verified to mint");
 
-        stoveProof memory _toBeAddedProof;
-        _toBeAddedProof.tonsCO2e = _tonsCO2e;
+        list[tokenID].verifier = msg.sender;
+        list[tokenID].verifierSignature = signature;
 
-        addressToProjectDevInfo[msg.sender].stoveUUIDtoStoveProof[stoveID].proofCollection.push(_toBeAddedProof);
+        list[tokenID].status = ConfirmationStatus.Approved;
 
         isSubmittedBatch[signature] = true;
 
-        //addressToProjectDevInfo[msg.sender].pendingCO2eTons = addressToProjectDevInfo[msg.sender].pendingCO2eTons.add(_tonsCO2e);
+        emit VCUSStatusUpdated(tokenID, ConfirmationStatus.Approved);
+    }
+
+    function rejectCU(
+        uint256 tokenID
+    ) external virtual onlyVerifier {
+
+        require(
+            _exists(tokenID),
+            'ERC721: token not exists'
+        );
+
+        require(
+            list[tokenID].status == ConfirmationStatus.Pending,
+            'This VCUs must be in Pending to Reject'
+        );
+
+        list[tokenID].status = ConfirmationStatus.Rejected;
+        emit VCUSStatusUpdated(tokenID, ConfirmationStatus.Rejected);
+
+    }
+
+    function _setTokenURI(uint256 tokenID, string memory _tokenURI) internal virtual {
+        require(_exists(tokenID), "ERC721URIStorage: URI set of nonexistent token");
+        _tokenURIs[tokenID] = _tokenURI;
+    }
+
+    function setMetadata(
+        uint256 tokenID,
+        string memory uri
+    ) external virtual onlyProjectDeveloper {
+
+        require(
+            _exists(tokenID),
+            'ERC721: token not exists'
+        );
+
+        require(
+            list[tokenID].status == ConfirmationStatus.Approved,
+            'This VCUs is not approved'
+        );
+
+        require(
+            _isApprovedOrOwner(_msgSender(), tokenID),
+            'ERC721: metadata caller is not owner nor approved'
+        );
+
+        _setTokenURI(tokenID,uri);
+        emit VCUSMetaDataUpdated(tokenID, uri);
+    }
 
 
+    function getTokenURI(uint256 tokenID) public view virtual returns (string memory) {
+        require(_exists(tokenID), "ERC721URIStorage: URI query for nonexistent token");
+        string memory _tokenURI = _tokenURIs[tokenID];
+        return _tokenURI;
     }
 
     // Interface function
 
     function getData(
-        uint256 tokenId
+        uint256 tokenID
     ) external view override returns(VCUSData memory) {
-        return list[tokenId];
+        return list[tokenID];
     }
 
     // Contract stuff

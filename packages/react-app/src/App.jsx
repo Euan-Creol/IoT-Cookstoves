@@ -29,7 +29,7 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph, Verify, Mint, FAQs, Register, Admin, Upload } from "./views";
+import { Home, ExampleUI, Hints, Subgraph, Verify, Mint, FAQs, Register, Admin, Upload, Check } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
@@ -71,7 +71,7 @@ const providers = [
 function App(props) {
   // specify all the chains your app is available on. Eg: ['localhost', 'mainnet', ...otherNetworks ]
   // reference './constants.js' for other networks
-  const networkOptions = ["localhost", "mainnet", "rinkeby"];
+  const networkOptions = ["localhost", "mumbai", "matic"];
 
   const [injectedProvider, setInjectedProvider] = useState();
   const [address, setAddress] = useState();
@@ -258,17 +258,14 @@ function App(props) {
         <Menu.Item key="/admin">
           <Link to="/admin">Admin</Link>
         </Menu.Item>
-        <Menu.Item key="/register">
-          <Link to="/register">Register</Link>
-        </Menu.Item>
         <Menu.Item key="/upload">
           <Link to="/upload">Upload</Link>
         </Menu.Item>
         <Menu.Item key="/verify">
           <Link to="/verify">Verify</Link>
         </Menu.Item>
-        <Menu.Item key="/mint">
-          <Link to="/mint">Mint</Link>
+        <Menu.Item key="/check">
+          <Link to="/check">Check</Link>
         </Menu.Item>
       </Menu>
 
@@ -400,6 +397,19 @@ function App(props) {
         </Route>
         <Route path="/upload">
           <Upload
+            address={address}
+            userSigner={userSigner}
+            mainnetProvider={mainnetProvider}
+            localProvider={localProvider}
+            yourLocalBalance={yourLocalBalance}
+            price={price}
+            tx={tx}
+            writeContracts={writeContracts}
+            readContracts={readContracts}
+          />
+        </Route>
+        <Route path="/check">
+          <Check
             address={address}
             userSigner={userSigner}
             mainnetProvider={mainnetProvider}

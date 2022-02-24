@@ -9,10 +9,11 @@ struct VCUSData {
     address projectDeveloper;
     address verifier;
     uint256 quantity;
+    uint256 vintage;
     uint256 vintageStart; // date of start vintage
     uint256 vintageEnd; // date of end vintage
     string dataLink;
-    string verifierSignature;
+    bytes verifierSignature;
     ConfirmationStatus status; // it is the status , it will be in approved after it was verified on the registry.
 }
 

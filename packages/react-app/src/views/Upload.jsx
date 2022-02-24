@@ -1,12 +1,13 @@
 import { SyncOutlined } from "@ant-design/icons";
 import { utils, Wallet } from "ethers";
-import {Button, Divider, Input, Dropdown, Menu, Space, Row, Col, Typography, Calendar, Select, Radio} from "antd";
+import {Button, Divider, Input, Dropdown, Menu, Space, Row, Col, Typography, Calendar, Select, Radio, Collapse} from "antd";
 import { DownOutlined, CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import React, {useEffect, useState} from "react";
 import { Address, Balance, Events } from "../components";
 import {arrayify} from "@ethersproject/bytes";
 import XLSX from 'xlsx';
 import { JsonToTable } from "react-json-to-table";
+import NFTDisplay from "../components/NFTDisplay";
 
 export default function Upload({
   address,
@@ -33,10 +34,6 @@ export default function Upload({
     setNewProjectMethodology(key)
   };
 
-  const onClickMethodology = ({ key }) => {
-    setNewMethodology(key)
-  };
-
   const projectDeveloperDropdown = (
     <Menu onClick={onClickDeveloper}>
       <Menu.Item key={ECSWallet}>
@@ -56,17 +53,6 @@ export default function Upload({
     </Menu>
   );
 
-  const methodologyDropdown = (
-    <Menu onClick={onClickMethodology}>
-      <Menu.Item key={"Fuel"}>
-        Fuel Data
-      </Menu.Item>
-      <Menu.Item key={"Stove"}>
-        Stove Data
-      </Menu.Item>
-    </Menu>
-  );
-
   function displayIcon(parameterInput) {
     if(parameterInput === null) {
       return <CloseCircleOutlined type="message" style={{ fontSize: '24px', color: '#08c' }} theme="outlined" />
@@ -78,7 +64,7 @@ export default function Upload({
   function enableDataSubmit() {
   if (newAddress !== null
     && newAmount !== null
-    && newMethodology !== null
+    && newProjectMethodology !== null
     && newVintageStart !== null
     && newVintageEnd !== null
     && newArweaveLink !== null) {
@@ -103,7 +89,21 @@ export default function Upload({
     })
   }
 
+  function projectStatusDisplay(status) {
+    switch (status) {
+      case 0:
+        return <h3>Created</h3>
+      case 1:
+        return <h3 style={{color: 'orange'}}>Pending</h3>
+      case 2:
+        return <h3 style={{color: 'green'}}>Approved</h3>
+      case 3:
+        return <h3 style={{color: 'red'}}>Rejected</h3>
+    }
+  }
+
   const {Option} = Select;
+  const { Panel } = Collapse;
 
   const { Text } = Typography;
 
@@ -112,7 +112,6 @@ export default function Upload({
   const [newAmount, setNewAmount] = useState(null);
   const [newNonce, setNewNonce] = useState(null);
   const [newProjectMethodology, setNewProjectMethodology] = useState(null);
-  const [newMethodology, setNewMethodology] = useState(null);
   const [newFullSignature, setNewFullSignature] = useState('');
   const [newVintageStart, setNewVintageStart] = useState(null);
   const [newVintageEnd, setNewVintageEnd] = useState(null);
@@ -140,88 +139,49 @@ export default function Upload({
         </div>
       </div>
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-        <div style={{ margin: 8 }}>
-          <Row>
-            <h2>Select Existing NFT</h2>
-          </Row>
-          <Row>
-            <button onClick={handleTokenLoading}>
-              Load tokens
-            </button>
-          </Row>
-          <Row>
-            <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
-              {newAddressTokens.map((tokenID) =>
-                <Option key={tokenID.toNumber()} value={tokenID.toNumber()}>{tokenID.toNumber()}</Option>
-              )}
-            </Select>
-          </Row>
-          <Row>
-            <h4>OR</h4>
-          </Row>
-          <Row>
-              <h2>Create empty NFT</h2>
-          </Row>
-          <Row>
-            <button onClick={async() => {
-              const result = tx(writeContracts.TonMinter.mintEmptyVCU())
-              result.then(async() => {
-                const tokenIDs = tx(writeContracts.TonMinter.getTokenIDs(address))
-                tokenIDs.then((tokenIDs) => {
-                  setNewTokenIDs(tokenIDs)
-                  setNewTokenID(tokenIDs[tokenIDs.length-1].toNumber())
-                  const data = tx(writeContracts.TonMinter.getData(tokenIDs[tokenIDs.length-1].toNumber()))
-                  data.then((data) => {
-                    setNewTokenData(data)
+        <div style={{ margin: 0 }}>
+          <Collapse onChange={handleTokenLoading} ghost>
+            <Panel header="Carbon container" key="1" >
+              <Row>
+                <h2>Select existing container</h2>
+              </Row>
+              <Row>
+                <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
+                  {newAddressTokens.map((tokenID) =>
+                    <Option key={tokenID.toNumber()} value={tokenID.toNumber()}>{tokenID.toNumber()}</Option>
+                  )}
+                </Select>
+              </Row>
+              <Row>
+                <h4>OR</h4>
+              </Row>
+              <Row>
+                <h2>Create empty container</h2>
+              </Row>
+              <Row>
+                <button onClick={async() => {
+                  const result = tx(writeContracts.TonMinter.mintEmptyVCU())
+                  result.then(async() => {
+                    const tokenIDs = tx(writeContracts.TonMinter.getTokenIDs(address))
+                    tokenIDs.then((tokenIDs) => {
+                      setNewTokenIDs(tokenIDs)
+                      setNewTokenID(tokenIDs[tokenIDs.length-1].toNumber())
+                      const data = tx(writeContracts.TonMinter.getData(tokenIDs[tokenIDs.length-1].toNumber()))
+                      data.then((data) => {
+                        setNewTokenData(data);
+                        handleTokenLoading()
+                      })
+                    })
                   })
-                })
-              })
-            }}>
-              Create
-            </button>
-          </Row>
+                }}>
+                  Create
+                </button>
+              </Row>
+            </Panel>
+          </Collapse>
           {newTokenData !== null &&
           <div>
-            <Row>
-              <Divider/>
-            </Row>
-            <div style={{border: "1px solid #cccccc", padding: 16, margin: "auto", marginTop: 32}}>
-              <div style={{margin: 8}}>
-                <Row>
-                  <h2>Token Data</h2>
-                </Row>
-                <Row>
-                  <h4>Token ID: {newTokenID}</h4>
-                </Row>
-                <Row>
-                  <h4>Methodology: {newTokenData.methodology}</h4>
-                </Row>
-                <Row>
-                  <h4>Project Developer: {newTokenData.projectDeveloper}</h4>
-                </Row>
-                <Row>
-                  <h4>Verifier: {newTokenData.verifier}</h4>
-                </Row>
-                <Row>
-                  <h4>Number of Tonnes: {newTokenData.quantity.toNumber()} tCO2e</h4>
-                </Row>
-                <Row>
-                  <h4>Data Link: {newTokenData.dataLink}</h4>
-                </Row>
-                <Row>
-                  <h4>Vintage Start: {newTokenData.vintageStart.toNumber()}</h4>
-                </Row>
-                <Row>
-                  <h4>Vintage End: {newTokenData.vintageEnd.toNumber()}</h4>
-                </Row>
-                <Row>
-                  <h4>Verifier Signature: {newTokenData.verifierSignature}</h4>
-                </Row>
-                <Row>
-                  <h4>Status: {newTokenData.status}</h4>
-                </Row>
-              </div>
-            </div>
+            <NFTDisplay tokenID={newTokenID} tokenData={newTokenData}/>
           </div>
           }
         </div>
@@ -236,6 +196,7 @@ export default function Upload({
         textAlign: "left"
       }}>
         <div style={{margin: 8}}>
+          <Divider/>
           <Row>
             <Col span={22}>
               <Space direction="vertical">
@@ -278,26 +239,6 @@ export default function Upload({
           <Divider/>
           {newProjectMethodology === "GS-Cookstoves" && (
             <div>
-              <Row>
-                <Col span={22}>
-                  <Space direction="vertical">
-                    <Space wrap>
-                      <Dropdown overlay={methodologyDropdown} click placement="bottomCenter">
-                        <h2>
-                          <a className="ant-dropdown-link" style={{color: '#cccccc'}} onClick={e => e.preventDefault()}>
-                            Methodology <DownOutlined/>
-                          </a>
-                        </h2>
-                      </Dropdown>
-                    </Space>
-                  </Space>
-                  <h4>{newMethodology}</h4>
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newMethodology)}
-                </Col>
-              </Row>
-              <Divider/>
               <Row>
                 <Col span={22}>
                   <h2>Amount of Carbon (tons CO2e)</h2>

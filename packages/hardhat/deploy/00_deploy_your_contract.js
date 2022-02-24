@@ -24,16 +24,8 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
     log: true,
   });
 
-  await deploy("C3VerifiedCarbonUnits", {
-    // Learn more about args here: https://www.npmjs.com/package/hardhat-deploy#deploymentsdeploy
-    from: deployer,
-    // args: [ "Hello", ethers.utils.parseEther("1.5") ],
-    log: true,
-  });
-
   // Getting a previously deployed contract
   const TonMinter = await ethers.getContract("TonMinter", deployer);
-  const C3VerifiedCarbonUnits = await ethers.getContract("C3VerifiedCarbonUnits", deployer);
   /*  await YourContract.setPurpose("Hello");
 
     To take ownership of yourContract using the ownable library uncomment next line and add the
@@ -77,11 +69,6 @@ module.exports = async ({ getNamedAccounts, deployments, getChainId }) => {
       contract: "contracts/TonMinter.sol:TonMinter",
       contractArguments: [],
     });
-    await run("verify:verify", {
-      address: C3VerifiedCarbonUnits.address,
-      contract: "contracts/C3/C3VerifiedCarbonUnits.sol:C3VerifiedCarbonUnits",
-      contractArguments: [],
-    });
   }
 };
-module.exports.tags = ["TonMinter", "C3VerifiedCarbonUnits"];
+module.exports.tags = ["TonMinter"];
