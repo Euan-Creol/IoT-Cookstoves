@@ -26,6 +26,7 @@ export default function Check({
   const ECSWallet = '0x55C9354F716188d3C937FC3C1569685B740bC8e3' //Wallet.createRandom()
   const ACEWallet = '0xB6FA19268D9bc22d1f92574505a5fac7622252Db' //Wallet.createRandom()
   const localHostWallet = '0x2BaFF0a5838Aa1F03dEFe89a4086362fe31F6675'
+  const mumbaiTestWallet = '0x886fE4aFE723B73a0804c2c5158DE3a7e6Ef4535'
 
   const onClickDeveloper = ({ key }) => {
     setNewAddress(key)
@@ -50,6 +51,9 @@ export default function Check({
       </Menu.Item>
       <Menu.Item key={localHostWallet}>
         LocalHost
+      </Menu.Item>
+      <Menu.Item key={mumbaiTestWallet}>
+        Mumbai
       </Menu.Item>
     </Menu>
   );
@@ -96,19 +100,6 @@ export default function Check({
     data.then((data) => {
       setNewTokenData(data)
     })
-  }
-
-  function projectStatusDisplay(status) {
-    switch (status) {
-      case 0:
-        return <h3>Created</h3>
-      case 1:
-        return <h3 style={{color: 'orange'}}>Pending</h3>
-      case 2:
-        return <h3 style={{color: 'green'}}>Approved</h3>
-      case 3:
-        return <h3 style={{color: 'red'}}>Rejected</h3>
-    }
   }
 
   const {Option} = Select;
@@ -336,11 +327,10 @@ export default function Check({
                       "Vintage End": newVintageEnd,
                       "Arweave Link": newArweaveLink
                     }
-                    const newNonce = 1;
                     setNewMessage(tokenMetadata)
-                    setNewNonce(newNonce)
                     //Hash the message
-                    const verify = tx(writeContracts.TonMinter.verify(newVerifier, newAddress, newAmount, newMessage, newNonce, newVerifierSignature))
+                    console.log(typeof newVerifier, typeof newAddress, typeof newAmount, typeof newMessage, typeof newTokenID, typeof newVerifierSignature)
+                    const verify = tx(writeContracts.TonMinter.verify(newVerifier, newAddress, newAmount, newMessage, newTokenID, newVerifierSignature))
                     verify.then((result) => {
                       if (typeof result == "boolean"){
                         setNewVerifyResult(result.toString())

@@ -26,7 +26,7 @@ const { isAddress, getAddress, formatUnits, parseUnits } = utils;
 //
 // Select the network you want to deploy to here:
 //
-const defaultNetwork = "localhost";
+const defaultNetwork = "mumbai";
 
 const mainnetGwei = 21;
 
@@ -66,10 +66,10 @@ module.exports = {
   networks: {
     localhost: {
       url: "http://localhost:8545",
-      /*      
+      /*
         notice no mnemonic here? it will just use account 0 of the hardhat node to deploy
         (you can put in a mnemonic here to set the deployer locally)
-      
+
       */
     },
 
@@ -153,14 +153,14 @@ module.exports = {
       },
     },
     polygon: {
-      url: "https://speedy-nodes-nyc.moralis.io/XXXXXXXXXXXXXXXXXXXx/polygon/mainnet", // <---- YOUR MORALIS ID! (not limited to infura)
+      url: "https://polygon-mainnet.infura.io/v3/847555e037034236bf0020e3d9986525", // <---- YOUR MORALIS ID! (not limited to infura)
       gasPrice: 1000000000,
       accounts: {
         mnemonic: mnemonic(),
       },
     },
-    polytest: {
-      url: "https://speedy-nodes-nyc.moralis.io/XXXXXXXXXXXXXXXXXXXXXXX/polygon/mumbai", // <---- YOUR MORALIS ID! (not limited to infura)
+    mumbai: {
+      url: "https://polygon-mumbai.infura.io/v3/847555e037034236bf0020e3d9986525", // <---- YOUR MORALIS ID! (not limited to infura)
       gasPrice: 1000000000,
       accounts: {
         mnemonic: mnemonic(),

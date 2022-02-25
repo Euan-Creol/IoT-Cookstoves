@@ -26,6 +26,7 @@ export default function Verify({
   const ECSWallet = '0x55C9354F716188d3C937FC3C1569685B740bC8e3' //Wallet.createRandom()
   const ACEWallet = '0xB6FA19268D9bc22d1f92574505a5fac7622252Db' //Wallet.createRandom()
   const localHostWallet = '0x2BaFF0a5838Aa1F03dEFe89a4086362fe31F6675'
+  const mumbaiTestWallet = '0x886fE4aFE723B73a0804c2c5158DE3a7e6Ef4535'
 
   const onClickDeveloper = ({ key }) => {
     setNewAddress(key)
@@ -50,6 +51,9 @@ export default function Verify({
       </Menu.Item>
       <Menu.Item key={localHostWallet}>
         LocalHost
+      </Menu.Item>
+      <Menu.Item key={mumbaiTestWallet}>
+        Mumbai
       </Menu.Item>
     </Menu>
   );
@@ -292,59 +296,98 @@ export default function Verify({
                       "Vintage End": newVintageEnd,
                       "Arweave Link": newArweaveLink
                     }
-                    const newNonce = 1;
                     setNewMessage(tokenMetadata)
-                    setNewNonce(newNonce)
                     //Hash the message
-                    const result = tx(writeContracts.TonMinter.getMessageHash(newAddress, parseInt(newAmount), tokenMetadata, parseInt(newNonce)));
-                    setNewMessageHash(await result)
+                    const result = tx(writeContracts.TonMinter.getMessageHash(newAddress, parseInt(newAmount), tokenMetadata, parseInt(newTokenID)));
+
+
                     result.then((messageHash) => {
+                      setNewMessageHash(messageHash)
+                      console.log(messageHash)
                       //Sign the message hash
                       let signPromise = userSigner.signMessage(arrayify(messageHash))
                       signPromise.then((signature) => {
+                        console.log(signature)
                         setNewFullSignature(signature)
-                        const approval = tx(writeContracts.TonMinter.approveCU(newTokenID, newAddress, parseInt(newAmount), tokenMetadata, parseInt(newNonce), signature))
+                      })
+                    })
+                  }}
+                >
+                  Sign Data
+                </Button>
+              </div>
+              <h4>Verifier Signature:
+                <Text copyable={{text: newFullSignature}}>
+                  <a
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    {newFullSignature.slice(0, 10) + '...'}
+                  </a>
+                </Text>
+              </h4>
+              {newFullSignature !== '' &&
+              <div>
+                <Divider/>
+                <div style={{textAlign: "center"}}>
+                  <Button
+                    disabled={enableDataSubmit()}
+                    onClick={async () => {
+                      const tokenMetadata = {
+                        "Project Methodology": newProjectMethodology,
+                        "Project Developer": newAddress,
+                        "Verifier": address,
+                        "Number of Tonnes": newAmount,
+                        "Vintage Start": newVintageStart,
+                        "Vintage End": newVintageEnd,
+                        "Arweave Link": newArweaveLink
+                      }
+                      setNewMessage(tokenMetadata)
+
+                      const approval = tx(writeContracts.TonMinter.approveCU(newTokenID, newAddress, parseInt(newAmount), tokenMetadata, parseInt(newTokenID), newFullSignature))
+                      approval.then(() => {
                         data = tx(writeContracts.TonMinter.getData(newTokenID))
                         data.then((data) => {
                           setNewTokenData(data)
                         })
                       })
-                    })
-                  }}
-                >
-                  Approve
-                </Button>
-              </div>
-              <h4>OR</h4>
-              <div style={{textAlign: "center"}}>
-                <Button
-                  disabled={enableDataSubmit()}
-                  onClick={async () => {
-                    const tokenMetadata = {
-                      "Project Methodology": newProjectMethodology,
-                      "Project Developer": newAddress,
-                      "Verifier": address,
-                      "Number of Tonnes": newAmount,
-                      "Vintage Start": newVintageStart,
-                      "Vintage End": newVintageEnd,
-                      "Arweave Link": newArweaveLink
-                    }
-                    const newNonce = 1;
-                    setNewMessage(tokenMetadata)
-                    setNewNonce(newNonce)
-                    //Hash the message
-                    const result = tx(writeContracts.TonMinter.rejectCU(newTokenID))
-                    result.then(() => {
-                      data = tx(writeContracts.TonMinter.getData(newTokenID))
-                      data.then((data) => {
-                        setNewTokenData(data)
+                    }}
+                  >
+                    Approve
+                  </Button>
+                </div>
+                <h4>OR</h4>
+                <div style={{textAlign: "center"}}>
+                  <Button
+                    disabled={enableDataSubmit()}
+                    onClick={async () => {
+                      const tokenMetadata = {
+                        "Project Methodology": newProjectMethodology,
+                        "Project Developer": newAddress,
+                        "Verifier": address,
+                        "Number of Tonnes": newAmount,
+                        "Vintage Start": newVintageStart,
+                        "Vintage End": newVintageEnd,
+                        "Arweave Link": newArweaveLink
+                      }
+                      const newNonce = 1;
+                      setNewMessage(tokenMetadata)
+                      setNewNonce(newNonce)
+                      //Hash the message
+                      const result = tx(writeContracts.TonMinter.rejectCU(newTokenID))
+                      result.then(() => {
+                        data = tx(writeContracts.TonMinter.getData(newTokenID))
+                        data.then((data) => {
+                          setNewTokenData(data)
+                        })
                       })
-                    })
-                  }}
-                >
-                  Reject
-                </Button>
+                    }}
+                  >
+                    Reject
+                  </Button>
+                </div>
               </div>
+              }
             </div>
           )}
         </div>

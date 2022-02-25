@@ -33,22 +33,7 @@ export default function Admin({
   const [newRemoveVerifier, setNewRemoveVerifier] = useState(null);
   const [newCheckVerifier, setNewCheckVerifier] = useState(null);
   const [newIsVerifier, setNewIsVerifier] = useState(null);
-  const [newCVCUAddress, setNewCVCUAddress] = useState(null);
   const [newAdminAddress, setNewAdminAddress] = useState(null);
-  const [newMintResult, setNewMintResult] = useState(null);
-
-  let filter = {
-    address: newCVCUAddress,
-    topics: [
-      ethers.utils.id("VCUSMinted(address,uint256)")
-    ]
-  }
-
-  /*
-  localProvider.on(filter, (result) => {
-    console.log(result)
-  })
-   */
 
   return (
     <div>

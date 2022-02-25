@@ -460,12 +460,12 @@ ERC721EnumerableUpgradeable
 
         require(
             list[tokenID].status != ConfirmationStatus.Approved,
-            'This VCUs is already approved'
+            'This VCU is already approved'
         );
 
         require(
             list[tokenID].status != ConfirmationStatus.Created || list[tokenID].status != ConfirmationStatus.Rejected,
-            'This VCUs is not yet filled with information'
+            'This VCU is not yet filled with information'
         );
 
         require(isSubmittedBatch[signature] == false, "This batch has already been submitted");

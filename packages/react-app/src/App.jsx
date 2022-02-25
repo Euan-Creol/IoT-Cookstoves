@@ -53,7 +53,7 @@ const { ethers } = require("ethers");
 */
 
 /// 📡 What chain are your contracts deployed to?
-const targetNetwork = NETWORKS.localhost; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
+const targetNetwork = NETWORKS.mumbai; // <------- select your target frontend network (localhost, rinkeby, xdai, mainnet)
 
 // 😬 Sorry for all the console logging
 const DEBUG = true;
@@ -65,17 +65,18 @@ const web3Modal = Web3ModalSetup();
 const providers = [
   "https://eth-mainnet.gateway.pokt.network/v1/lb/611156b4a585a20035148406",
   `https://eth-mainnet.alchemyapi.io/v2/${ALCHEMY_KEY}`,
-  "https://rpc.scaffoldeth.io:48544",
+  //"https://polygon-rpc.com/",
+  "https://rpc.scaffoldeth.io:48544"
 ];
 
 function App(props) {
   // specify all the chains your app is available on. Eg: ['localhost', 'mainnet', ...otherNetworks ]
   // reference './constants.js' for other networks
-  const networkOptions = ["localhost", "mumbai", "matic"];
+  const networkOptions = ["localhost", "mumbai", "matic", "mainnet"];
 
   const [injectedProvider, setInjectedProvider] = useState();
   const [address, setAddress] = useState();
-  const [selectedNetwork, setSelectedNetwork] = useState(networkOptions[0]);
+  const [selectedNetwork, setSelectedNetwork] = useState(networkOptions[1]);
   const location = useLocation();
 
   /// 📡 What chain are your contracts deployed to?
@@ -93,7 +94,7 @@ function App(props) {
   if (DEBUG) console.log(`Using ${selectedNetwork} network`);
 
   // 🛰 providers
-  if (DEBUG) console.log("📡 Connecting to Mainnet Ethereum");
+  if (DEBUG) console.log("📡 Connecting to " + selectedNetwork);
 
   const logoutOfWeb3Modal = async () => {
     await web3Modal.clearCachedProvider();
@@ -195,10 +196,14 @@ function App(props) {
       console.log("🕵🏻‍♂️ selectedChainId:", selectedChainId);
       console.log("💵 yourLocalBalance", yourLocalBalance ? ethers.utils.formatEther(yourLocalBalance) : "...");
       console.log("💵 yourMainnetBalance", yourMainnetBalance ? ethers.utils.formatEther(yourMainnetBalance) : "...");
-      console.log("📝 readContracts", readContracts);
       console.log("🌍 DAI contract on mainnet:", mainnetContracts);
       console.log("💵 yourMainnetDAIBalance", myMainnetDAIBalance);
+      console.log("📝 readContracts", readContracts);
+      console.log("READ", localProvider, contractConfig)
       console.log("🔐 writeContracts", writeContracts);
+      console.log("WRITE", userSigner, contractConfig, localChainId)
+      //console.log("USERSIGNER", injectedProvider, userProviderAndSigner, userSigner)
+      //console.log("INJECTEDPROV", injectedProvider)
     }
   }, [
     mainnetProvider,
@@ -285,7 +290,7 @@ function App(props) {
             */}
 
           <Contract
-            name="YourContract"
+            name="TonMinter"
             price={price}
             signer={userSigner}
             provider={localProvider}

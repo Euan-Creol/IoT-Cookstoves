@@ -39,7 +39,16 @@ export default function NFTDisplay(props) {
           <h4>Number of Tonnes: {props.tokenData.quantity.toNumber()} tCO2e</h4>
         </Row>
         <Row>
-          <h4>Data Link: {props.tokenData.dataLink}</h4>
+          <h4>Arweave Link:
+            <Text copyable={{text: props.tokenData.dataLink}}>
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {props.tokenData.dataLink.slice(0, 20) + '...'}
+              </a>
+            </Text>
+          </h4>
         </Row>
         <Row>
           <h4>Vintage: {props.tokenData.vintage.toNumber()}</h4>

@@ -25,12 +25,18 @@ function Home({ yourLocalBalance, readContracts }) {
       <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
         <div style={{ margin: 32 }}>
           <h2>
-            Access to the <Link to="/verify">Verifier Portal</Link>
+            Access to the <Link to="/upload">Project Developer Portal</Link>
           </h2>
         </div>
         <div style={{ margin: 32 }}>
           <h2>
-            Access to the <Link to="/mint">Project Developer Portal</Link>
+            Access to the <Link to="/verify">Approval Portal</Link>
+          </h2>
+        </div>
+        <Divider/>
+        <div style={{ margin: 32 }}>
+          <h2>
+            Validate tons against data (Available to everyone) <Link to="/check">Validate Portal</Link>
           </h2>
         </div>
       </div>
