@@ -1,6 +1,6 @@
 import { SyncOutlined } from "@ant-design/icons";
 import { utils, Wallet } from "ethers";
-import {Button, Divider, Input, Dropdown, Menu, Space, Row, Col, Typography, Calendar, Select, Radio} from "antd";
+import {Button, Divider, Input, Dropdown, Menu, Space, Row, Col, Typography, Calendar, Select, Radio, Card} from "antd";
 import { DownOutlined, CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import React, {useEffect, useState} from "react";
 import { Address, Balance, Events } from "../components";
@@ -127,21 +127,31 @@ export default function Verify({
   return (
     <div>
       <h1>Verify</h1>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-        <div>
-          Your Address:
-          <Address address={address} ensProvider={mainnetProvider} fontSize={16} />
-        </div>
-        <div>
-          Contract Address:
-          <Address
-            address={readContracts && readContracts.TonMinter ? readContracts.TonMinter.address : null}
-            ensProvider={mainnetProvider}
-            fontSize={16}
-          />
-        </div>
-      </div>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
+      <Row align={'center'}>
+        <Col align={'center'} span={12}>
+          <div>
+            <Card style={{borderRadius: '0.8rem', margin: 16}}>
+              <div>
+                Your Address:
+                <Address address={address} ensProvider={mainnetProvider} fontSize={16} />
+              </div>
+              <div>
+                Contract Address:
+                <Address
+                  address={readContracts && readContracts.TonMinter ? readContracts.TonMinter.address : null}
+                  ensProvider={mainnetProvider}
+                  fontSize={16}
+                />
+              </div>
+            </Card>
+          </div>
+        </Col>
+      </Row>
+      <Row align={'center'}>
+        <Col align={'center'} span={12}>
+          <div>
+            <Card style={{borderRadius: '0.8rem', margin: 16}}>
+              <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
         <div style={{ margin: 8 }}>
           <Row>
             <Col span={22}>
@@ -164,9 +174,16 @@ export default function Verify({
           </Row>
         </div>
       </div>
+            </Card>
+          </div>
+        </Col>
+      </Row>
       {newAddressTokens !== null && (
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-        <div style={{ margin: 8 }}>
+        <Row align={'center'}>
+          <Col align={'center'} span={12}>
+            <div>
+              <Card style={{borderRadius: '0.8rem', margin: 16}}>
+                <div style={{ margin: 8 }}>
           <Row>
             <h2>Select Container</h2>
           </Row>
@@ -188,210 +205,212 @@ export default function Verify({
           </div>
           }
         </div>
-      </div>
+              </Card>
+            </div>
+          </Col>
+        </Row>
       )}
       {newTokenData !== null &&
-      <div style={{
-        border: "1px solid #cccccc",
-        padding: 16,
-        width: 550,
-        margin: "auto",
-        marginTop: 32,
-        textAlign: "left"
-      }}>
-        <div style={{margin: 8}}>
-          <Row>
-            <Col span={22}>
-              <Space direction="vertical">
-                <Space wrap>
-                  <Dropdown overlay={projectMethodologyDropdown} click placement="bottomCenter">
-                    <h2>
-                      <a className="ant-dropdown-link" style={{color: '#cccccc'}} onClick={e => e.preventDefault()}>
-                        Project Methodology <DownOutlined/>
-                      </a>
-                    </h2>
-                  </Dropdown>
-                </Space>
-              </Space>
-              <h4>{newProjectMethodology}</h4>
-            </Col>
-            <Col span={2}>
-              {displayIcon(newProjectMethodology)}
-            </Col>
-          </Row>
-          <Divider/>
-          {newProjectMethodology === "GS-Cookstoves" && (
-            <div>
-              <Row>
-                <Col span={22}>
-                  <h2>Amount of Carbon (tons CO2e)</h2>
-                  <Input
-                    onChange={e => {
-                      setNewAmount(e.target.value);
-                    }}
-                  />
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newAmount)}
-                </Col>
-              </Row>
-              <Divider/>
-              <Row>
-                <Col span={22}>
-                  <h2>Vintage Start</h2>
-                  <Input placeholder="UNIX Time" onChange={e => {
-                    setNewVintageStart(e.target.value)
-                  }}/>
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newVintageStart)}
-                </Col>
-              </Row>
-              <Divider/>
-              <Row>
-                <Col span={22}>
-                  <h2>Vintage End</h2>
-                  <Input placeholder="UNIX Time" onChange={e => {
-                    setNewVintageEnd(e.target.value)
-                  }}/>
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newVintageEnd)}
-                </Col>
-              </Row>
-              <Divider/>
-              <Row>
-                <Col span={22}>
-                  <h2>Arweave Link</h2>
-                  <Input
-                    placeholder="Arweave Link"
-                    onChange={e => {
-                      setNewArweaveLink(e.target.value);
-                    }}
-                  />
-                </Col>
-                <Col span={2}>
-                  {displayIcon(newArweaveLink)}
-                </Col>
-              </Row>
-              <Row>
-                <Col span={22}>
-                  <div>
-                    How to upload to Arweave >
-                  </div>
-                </Col>
-                <Col span={2}/>
-              </Row>
-              <Divider/>
-              <div style={{textAlign: "center"}}>
-                <Button
-                  disabled={enableDataSubmit()}
-                  onClick={async () => {
-                    const tokenMetadata = {
-                      "Project Methodology": newProjectMethodology,
-                      "Project Developer": newAddress,
-                      "Verifier": address,
-                      "Number of Tonnes": newAmount,
-                      "Vintage Start": newVintageStart,
-                      "Vintage End": newVintageEnd,
-                      "Arweave Link": newArweaveLink
-                    }
-                    setNewMessage(tokenMetadata)
-                    //Hash the message
-                    const result = tx(writeContracts.TonMinter.getMessageHash(newAddress, parseInt(newAmount), tokenMetadata, parseInt(newTokenID)));
+      <Row align={'center'}>
+        <Col align={'center'} span={12}>
+          <div>
+            <Card style={{borderRadius: '0.8rem', margin: 16}}>
+              <div style={{margin: 8}}>
+                  <Row>
+                    <Col span={22}>
+                      <Space direction="vertical">
+                        <Space wrap>
+                          <Dropdown overlay={projectMethodologyDropdown} click placement="bottomCenter">
+                            <h2>
+                              <a className="ant-dropdown-link" style={{color: '#cccccc'}} onClick={e => e.preventDefault()}>
+                                Project Methodology <DownOutlined/>
+                              </a>
+                            </h2>
+                          </Dropdown>
+                        </Space>
+                      </Space>
+                      <h4>{newProjectMethodology}</h4>
+                    </Col>
+                    <Col span={2}>
+                      {displayIcon(newProjectMethodology)}
+                    </Col>
+                  </Row>
+                  <Divider/>
+                  {newProjectMethodology === "GS-Cookstoves" && (
+                    <div>
+                      <Row>
+                        <Col span={22}>
+                          <h2>Amount of Carbon (tons CO2e)</h2>
+                          <Input
+                            onChange={e => {
+                              setNewAmount(e.target.value);
+                            }}
+                          />
+                        </Col>
+                        <Col span={2}>
+                          {displayIcon(newAmount)}
+                        </Col>
+                      </Row>
+                      <Divider/>
+                      <Row>
+                        <Col span={22}>
+                          <h2>Vintage Start</h2>
+                          <Input placeholder="UNIX Time" onChange={e => {
+                            setNewVintageStart(e.target.value)
+                          }}/>
+                        </Col>
+                        <Col span={2}>
+                          {displayIcon(newVintageStart)}
+                        </Col>
+                      </Row>
+                      <Divider/>
+                      <Row>
+                        <Col span={22}>
+                          <h2>Vintage End</h2>
+                          <Input placeholder="UNIX Time" onChange={e => {
+                            setNewVintageEnd(e.target.value)
+                          }}/>
+                        </Col>
+                        <Col span={2}>
+                          {displayIcon(newVintageEnd)}
+                        </Col>
+                      </Row>
+                      <Divider/>
+                      <Row>
+                        <Col span={22}>
+                          <h2>Arweave Link</h2>
+                          <Input
+                            placeholder="Arweave Link"
+                            onChange={e => {
+                              setNewArweaveLink(e.target.value);
+                            }}
+                          />
+                        </Col>
+                        <Col span={2}>
+                          {displayIcon(newArweaveLink)}
+                        </Col>
+                      </Row>
+                      <Row>
+                        <Col span={22}>
+                          <div>
+                            How to upload to Arweave >
+                          </div>
+                        </Col>
+                        <Col span={2}/>
+                      </Row>
+                      <Divider/>
+                      <div style={{textAlign: "center"}}>
+                        <Button
+                          disabled={enableDataSubmit()}
+                          onClick={async () => {
+                            const tokenMetadata = {
+                              "Project Methodology": newProjectMethodology,
+                              "Project Developer": newAddress,
+                              "Verifier": address,
+                              "Number of Tonnes": newAmount,
+                              "Vintage Start": newVintageStart,
+                              "Vintage End": newVintageEnd,
+                              "Arweave Link": newArweaveLink
+                            }
+                            setNewMessage(tokenMetadata)
+                            //Hash the message
+                            const result = tx(writeContracts.TonMinter.getMessageHash(newAddress, parseInt(newAmount), tokenMetadata, parseInt(newTokenID)));
 
 
-                    result.then((messageHash) => {
-                      setNewMessageHash(messageHash)
-                      console.log(messageHash)
-                      //Sign the message hash
-                      let signPromise = userSigner.signMessage(arrayify(messageHash))
-                      signPromise.then((signature) => {
-                        console.log(signature)
-                        setNewFullSignature(signature)
-                      })
-                    })
-                  }}
-                >
-                  Sign Data
-                </Button>
-              </div>
-              <h4>Verifier Signature:
-                <Text copyable={{text: newFullSignature}}>
-                  <a
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {newFullSignature.slice(0, 10) + '...'}
-                  </a>
-                </Text>
-              </h4>
-              {newFullSignature !== '' &&
-              <div>
-                <Divider/>
-                <div style={{textAlign: "center"}}>
-                  <Button
-                    disabled={enableDataSubmit()}
-                    onClick={async () => {
-                      const tokenMetadata = {
-                        "Project Methodology": newProjectMethodology,
-                        "Project Developer": newAddress,
-                        "Verifier": address,
-                        "Number of Tonnes": newAmount,
-                        "Vintage Start": newVintageStart,
-                        "Vintage End": newVintageEnd,
-                        "Arweave Link": newArweaveLink
+                            result.then((messageHash) => {
+                              setNewMessageHash(messageHash)
+                              console.log(messageHash)
+                              //Sign the message hash
+                              let signPromise = userSigner.signMessage(arrayify(messageHash))
+                              signPromise.then((signature) => {
+                                console.log(signature)
+                                setNewFullSignature(signature)
+                              })
+                            })
+                          }}
+                        >
+                          Sign Data
+                        </Button>
+                      </div>
+                      <h4>Verifier Signature:
+                        <Text copyable={{text: newFullSignature}}>
+                          <a
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            {newFullSignature.slice(0, 10) + '...'}
+                          </a>
+                        </Text>
+                      </h4>
+                      {newFullSignature !== '' &&
+                      <div>
+                        <Divider/>
+                        <div style={{textAlign: "center"}}>
+                          <Button
+                            disabled={enableDataSubmit()}
+                            onClick={async () => {
+                              const tokenMetadata = {
+                                "Project Methodology": newProjectMethodology,
+                                "Project Developer": newAddress,
+                                "Verifier": address,
+                                "Number of Tonnes": newAmount,
+                                "Vintage Start": newVintageStart,
+                                "Vintage End": newVintageEnd,
+                                "Arweave Link": newArweaveLink
+                              }
+                              setNewMessage(tokenMetadata)
+
+                              const approval = tx(writeContracts.TonMinter.approveCU(newTokenID, newAddress, parseInt(newAmount), tokenMetadata, parseInt(newTokenID), newFullSignature))
+                              approval.then(() => {
+                                data = tx(writeContracts.TonMinter.getData(newTokenID))
+                                data.then((data) => {
+                                  setNewTokenData(data)
+                                })
+                              })
+                            }}
+                          >
+                            Approve
+                          </Button>
+                        </div>
+                        <h4>OR</h4>
+                        <div style={{textAlign: "center"}}>
+                          <Button
+                            disabled={enableDataSubmit()}
+                            onClick={async () => {
+                              const tokenMetadata = {
+                                "Project Methodology": newProjectMethodology,
+                                "Project Developer": newAddress,
+                                "Verifier": address,
+                                "Number of Tonnes": newAmount,
+                                "Vintage Start": newVintageStart,
+                                "Vintage End": newVintageEnd,
+                                "Arweave Link": newArweaveLink
+                              }
+                              const newNonce = 1;
+                              setNewMessage(tokenMetadata)
+                              setNewNonce(newNonce)
+                              //Hash the message
+                              const result = tx(writeContracts.TonMinter.rejectCU(newTokenID))
+                              result.then(() => {
+                                data = tx(writeContracts.TonMinter.getData(newTokenID))
+                                data.then((data) => {
+                                  setNewTokenData(data)
+                                })
+                              })
+                            }}
+                          >
+                            Reject
+                          </Button>
+                        </div>
+                      </div>
                       }
-                      setNewMessage(tokenMetadata)
-
-                      const approval = tx(writeContracts.TonMinter.approveCU(newTokenID, newAddress, parseInt(newAmount), tokenMetadata, parseInt(newTokenID), newFullSignature))
-                      approval.then(() => {
-                        data = tx(writeContracts.TonMinter.getData(newTokenID))
-                        data.then((data) => {
-                          setNewTokenData(data)
-                        })
-                      })
-                    }}
-                  >
-                    Approve
-                  </Button>
+                    </div>
+                  )}
                 </div>
-                <h4>OR</h4>
-                <div style={{textAlign: "center"}}>
-                  <Button
-                    disabled={enableDataSubmit()}
-                    onClick={async () => {
-                      const tokenMetadata = {
-                        "Project Methodology": newProjectMethodology,
-                        "Project Developer": newAddress,
-                        "Verifier": address,
-                        "Number of Tonnes": newAmount,
-                        "Vintage Start": newVintageStart,
-                        "Vintage End": newVintageEnd,
-                        "Arweave Link": newArweaveLink
-                      }
-                      const newNonce = 1;
-                      setNewMessage(tokenMetadata)
-                      setNewNonce(newNonce)
-                      //Hash the message
-                      const result = tx(writeContracts.TonMinter.rejectCU(newTokenID))
-                      result.then(() => {
-                        data = tx(writeContracts.TonMinter.getData(newTokenID))
-                        data.then((data) => {
-                          setNewTokenData(data)
-                        })
-                      })
-                    }}
-                  >
-                    Reject
-                  </Button>
-                </div>
-              </div>
-              }
-            </div>
-          )}
-        </div>
-      </div>
+            </Card>
+          </div>
+        </Col>
+      </Row>
       }
     </div>
   )

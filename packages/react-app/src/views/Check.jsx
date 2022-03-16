@@ -1,6 +1,6 @@
 import { SyncOutlined } from "@ant-design/icons";
 import { utils, Wallet } from "ethers";
-import {Button, Divider, Input, Dropdown, Menu, Space, Row, Col, Typography, Calendar, Select, Radio} from "antd";
+import {Button, Divider, Input, Dropdown, Menu, Space, Row, Col, Typography, Calendar, Select, Radio, Card} from "antd";
 import { DownOutlined, CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import React, {useEffect, useState} from "react";
 import { Address, Balance, Events } from "../components";
@@ -129,22 +129,31 @@ export default function Check({
   return (
     <div>
       <h1>Check</h1>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-        <div>
-          Your Address:
-          <Address address={address} ensProvider={mainnetProvider} fontSize={16} />
-        </div>
-        <div>
-          Contract Address:
-          <Address
-            address={readContracts && readContracts.TonMinter ? readContracts.TonMinter.address : null}
-            ensProvider={mainnetProvider}
-            fontSize={16}
-          />
-        </div>
-      </div>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32, textAlign: "left" }}>
-        <div style={{ margin: 8 }}>
+      <Row align={'center'}>
+        <Col align={'center'} span={12}>
+          <div>
+            <Card style={{borderRadius: '0.8rem', margin: 16}}>
+              <div>
+                Your Address:
+                <Address address={address} ensProvider={mainnetProvider} fontSize={16} />
+              </div>
+              <div>
+                Contract Address:
+                <Address
+                  address={readContracts && readContracts.TonMinter ? readContracts.TonMinter.address : null}
+                  ensProvider={mainnetProvider}
+                  fontSize={16}
+                />
+              </div>
+            </Card>
+          </div>
+        </Col>
+      </Row>
+      <Row align={'center'}>
+        <Col align={'center'} span={12}>
+          <div>
+            <Card style={{borderRadius: '0.8rem', margin: 16}}>
+              <div style={{ margin: 8 }}>
           <Row>
             <Col span={22}>
               <Space direction="vertical">
@@ -165,10 +174,16 @@ export default function Check({
             </Col>
           </Row>
         </div>
-      </div>
+            </Card>
+          </div>
+        </Col>
+      </Row>
       {newAddressTokens !== null && (
-        <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-          <div style={{ margin: 8 }}>
+        <Row align={'center'}>
+          <Col align={'center'} span={12}>
+            <div>
+              <Card style={{borderRadius: '0.8rem', margin: 16}}>
+                <div style={{ margin: 8 }}>
             <Row>
               <h2>Select Existing Container</h2>
             </Row>
@@ -190,18 +205,17 @@ export default function Check({
             </div>
             }
           </div>
-        </div>
+              </Card>
+            </div>
+          </Col>
+        </Row>
       )}
       {newTokenData !== null &&
-      <div style={{
-        border: "1px solid #cccccc",
-        padding: 16,
-        width: 550,
-        margin: "auto",
-        marginTop: 32,
-        textAlign: "left"
-      }}>
-        <div style={{margin: 8}}>
+      <Row align={'center'}>
+        <Col align={'center'} span={12}>
+          <div>
+            <Card style={{borderRadius: '0.8rem', margin: 16}}>
+              <div style={{margin: 8}}>
           <Row>
             <Col span={22}>
               <Space direction="vertical">
@@ -345,7 +359,10 @@ export default function Check({
             </div>
           )}
         </div>
-      </div>
+            </Card>
+          </div>
+        </Col>
+      </Row>
       }
     </div>
   )
