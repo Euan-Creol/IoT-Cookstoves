@@ -33,7 +33,7 @@ function Home({ yourLocalBalance, readContracts }) {
         <Col span={16} align={'center'}>
           <div>
             <Card style={{borderRadius: '0.8rem', margin: 16}}>
-              <Link to={'/upload'}>
+              <Link to={'/project-developer'}>
               <Row align={'center'}>
                 <Col span={1} align={'left'}/>
                 <Col span={14} align={'left'}>

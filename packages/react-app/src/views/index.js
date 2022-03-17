@@ -10,3 +10,4 @@ export { default as Admin } from "./Admin"
 export { default as Upload } from "./Upload"
 export { default as Check } from "./Check"
 export { default as Actions } from "./Actions"
+export { default as ProjectDev } from './ProjectDev'

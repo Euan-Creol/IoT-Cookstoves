@@ -1,6 +1,21 @@
 import { SyncOutlined } from "@ant-design/icons";
 import { utils, Wallet } from "ethers";
-import {Button, Divider, Input, Dropdown, Menu, Space, Row, Col, Typography, Calendar, Select, Radio, Collapse} from "antd";
+import {
+  Button,
+  Divider,
+  Input,
+  Dropdown,
+  Menu,
+  Space,
+  Row,
+  Col,
+  Typography,
+  Calendar,
+  Select,
+  Radio,
+  Collapse,
+  Card
+} from "antd";
 import { DownOutlined, CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import React, {useEffect, useState} from "react";
 import { Address, Balance, Events } from "../components";
@@ -60,26 +75,35 @@ export default function Actions({
   return (
     <div>
       <h1>Actions</h1>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-        <div>
-          Your Address:
-          <Address address={address} ensProvider={mainnetProvider} fontSize={16} />
-        </div>
-        <div>
-          Contract Address:
-          <Address
-            address={readContracts && readContracts.TonMinter ? readContracts.TonMinter.address : null}
-            ensProvider={mainnetProvider}
-            fontSize={16}
-          />
-        </div>
-      </div>
-      <div style={{ border: "1px solid #cccccc", padding: 16, width: 550, margin: "auto", marginTop: 32 }}>
-        <div style={{ margin: 0 }}>
+      <Row align={'center'}>
+        <Col align={'center'} span={12}>
+          <div>
+            <Card style={{borderRadius: '0.8rem', margin: 16}}>
+              <div>
+                Your Address:
+                <Address address={address} ensProvider={mainnetProvider} fontSize={16} />
+              </div>
+              <div>
+                Contract Address:
+                <Address
+                  address={readContracts && readContracts.TonMinter ? readContracts.TonMinter.address : null}
+                  ensProvider={mainnetProvider}
+                  fontSize={16}
+                />
+              </div>
+            </Card>
+          </div>
+        </Col>
+      </Row>
+      <Row align={'center'}>
+        <Col align={'center'} span={12}>
+          <div>
+            <Card style={{borderRadius: '0.8rem', margin: 16}}>
+               <div style={{ margin: 0 }}>
           <Collapse onChange={handleTokenLoading} ghost>
-            <Panel header="Carbon container" key="1" >
+            <Panel header="Carbon batch" key="1" >
               <Row>
-                <h2>Select container</h2>
+                <h1>Select batch</h1>
               </Row>
               <Row>
                 <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
@@ -96,17 +120,16 @@ export default function Actions({
           </div>
           }
         </div>
-      </div>
+            </Card>
+          </div>
+        </Col>
+      </Row>
       {newTokenData !== null &&
-      <div style={{
-        border: "1px solid #cccccc",
-        padding: 16,
-        width: 550,
-        margin: "auto",
-        marginTop: 32,
-        textAlign: "left"
-      }}>
-        <div style={{margin: 8}}>
+      <Row align={'center'}>
+        <Col align={'center'} span={12}>
+          <div>
+            <Card style={{borderRadius: '0.8rem', margin: 16}}>
+              <div style={{margin: 8}}>
           <Divider/>
           <Row>
             <Col span={22}>
@@ -142,7 +165,10 @@ export default function Actions({
             </button>
           </Row>
       </div>
-    </div>
+            </Card>
+          </div>
+        </Col>
+      </Row>
       }
     </div>
   )

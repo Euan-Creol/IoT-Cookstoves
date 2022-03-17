@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+import React, {useEffect, useState} from "react";
 import { SyncOutlined } from "@ant-design/icons";
 import { utils, Wallet } from "ethers";
 import {
@@ -17,7 +19,6 @@ import {
   Card
 } from "antd";
 import { DownOutlined, CloseCircleOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import React, {useEffect, useState} from "react";
 import { Address, Balance, Events } from "../components";
 import {arrayify} from "@ethersproject/bytes";
 import XLSX from 'xlsx';
@@ -124,7 +125,7 @@ export default function Upload({
 
   return (
     <div>
-      <h1>Upload Data</h1>
+      <h1>Data upload</h1>
       <Row align={'center'}>
         <Col align={'center'} span={12}>
           <div>
@@ -162,9 +163,9 @@ export default function Upload({
             <Card style={{borderRadius: '0.8rem', margin: 16}}>
               <div style={{ margin: 0 }}>
                 <Collapse onChange={handleTokenLoading} ghost>
-                  <Panel header="Carbon container" key="1" >
+                  <Panel header="Carbon batch" key="1" >
                     <Row>
-                      <h2>Select existing container</h2>
+                      <h1>Select existing batch</h1>
                     </Row>
                     <Row>
                       <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
@@ -177,7 +178,7 @@ export default function Upload({
                       <h4>OR</h4>
                     </Row>
                     <Row>
-                      <h2>Create empty container</h2>
+                      <h2>Create new batch</h2>
                     </Row>
                     <Row>
                       <Button onClick={async() => {
@@ -185,19 +186,23 @@ export default function Upload({
                         result.then(async() => {
                           const tokenIDs = tx(writeContracts.TonMinter.getTokenIDs(address))
                           tokenIDs.then((tokenIDs) => {
-                            setNewTokenIDs(tokenIDs)
-                            setNewTokenID(tokenIDs[tokenIDs.length-1].toNumber())
-                            const data = tx(writeContracts.TonMinter.getData(tokenIDs[tokenIDs.length-1].toNumber()))
-                            data.then((data) => {
-                              setNewTokenData(data);
-                              handleTokenLoading()
-                            })
+                            if (tokenIDs.length !== 0) {
+                              setNewTokenIDs(tokenIDs)
+                              setNewTokenID(tokenIDs[tokenIDs.length-1].toNumber())
+                              const data = tx(writeContracts.TonMinter.getData(tokenIDs[tokenIDs.length-1].toNumber()))
+                              data.then((data) => {
+                                setNewTokenData(data);
+                                handleTokenLoading()
+                              })
+                            }
                           })
                         })
                       }}>
                         Create
                       </Button>
-                      <h4>Already created a container? View actions <Link to={'/actions'}>here</Link></h4>
+                    </Row>
+                    <Row>
+                      <h4>Already created a batch? View actions <Link to={'/actions'}>here</Link></h4>
                     </Row>
                   </Panel>
                 </Collapse>

@@ -29,7 +29,7 @@ import externalContracts from "./contracts/external_contracts";
 // contracts
 import deployedContracts from "./contracts/hardhat_contracts.json";
 import { Transactor, Web3ModalSetup } from "./helpers";
-import { Home, ExampleUI, Hints, Subgraph, Verify, Mint, FAQs, Register, Admin, Upload, Check, Actions } from "./views";
+import { Home, ExampleUI, Hints, Subgraph, Verify, Mint, FAQs, Register, Admin, Upload, Check, Actions, ProjectDev } from "./views";
 import { useStaticJsonRPC } from "./hooks";
 
 const { ethers } = require("ethers");
@@ -256,26 +256,34 @@ function App(props) {
         targetNetwork={targetNetwork}
         logoutOfWeb3Modal={logoutOfWeb3Modal}
       />
-      <Menu style={{ textAlign: "center" }} selectedKeys={[location.pathname]} mode="horizontal">
-        <Menu.Item key="/">
-          <Link to="/">Home</Link>
-        </Menu.Item>
-        <Menu.Item key="/admin">
-          <Link to="/admin">Admin</Link>
-        </Menu.Item>
-        <Menu.Item key="/upload">
-          <Link to="/upload">Upload</Link>
-        </Menu.Item>
-        <Menu.Item key="/verify">
-          <Link to="/verify">Verify</Link>
-        </Menu.Item>
-        <Menu.Item key="/check">
-          <Link to="/check">Check</Link>
-        </Menu.Item>
-        <Menu.Item key="/actions">
-          <Link to="/Actions">Actions</Link>
-        </Menu.Item>
-      </Menu>
+      {
+        /*
+        <Menu style={{ textAlign: "center" }} selectedKeys={[location.pathname]} mode="horizontal">
+          <Menu.Item key="/">
+            <Link to="/">Home</Link>
+          </Menu.Item>
+          <Menu.Item key="/admin">
+            <Link to="/admin">Admin</Link>
+          </Menu.Item>
+          <Menu.Item key="/upload">
+            <Link to="/upload">Upload</Link>
+          </Menu.Item>
+          <Menu.Item key="/verify">
+            <Link to="/verify">Verify</Link>
+          </Menu.Item>
+          <Menu.Item key="/check">
+            <Link to="/check">Check</Link>
+          </Menu.Item>
+          <Menu.Item key="/actions">
+            <Link to="/Actions">Actions</Link>
+          </Menu.Item>
+          <Menu.Item key="/project-developer">
+            <Link to="/project-developer">Project Developers</Link>
+          </Menu.Item>
+        </Menu>
+
+         */
+      }
 
       <Switch>
         <Route exact path="/">
@@ -431,6 +439,19 @@ function App(props) {
         </Route>
         <Route path="/actions">
           <Actions
+            address={address}
+            userSigner={userSigner}
+            mainnetProvider={mainnetProvider}
+            localProvider={localProvider}
+            yourLocalBalance={yourLocalBalance}
+            price={price}
+            tx={tx}
+            writeContracts={writeContracts}
+            readContracts={readContracts}
+          />
+        </Route>
+        <Route path="/project-developer">
+          <ProjectDev
             address={address}
             userSigner={userSigner}
             mainnetProvider={mainnetProvider}

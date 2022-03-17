@@ -185,7 +185,7 @@ export default function Verify({
               <Card style={{borderRadius: '0.8rem', margin: 16}}>
                 <div style={{ margin: 8 }}>
           <Row>
-            <h2>Select Container</h2>
+            <h2>Select batch</h2>
           </Row>
           <Row>
             <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
