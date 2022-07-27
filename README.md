@@ -1,6 +1,13 @@
 # 🏗 Verifier Demo App
 
-An app allowing a verifier to approve tonnage minting by a project developer. 
+An app allowing a project developer to make 'ton claims', a verifier to approve them and the public to check the tons for themselves.
+
+![Project Overview](./project_screenshot.png)
+
+Smart contracts can be found in 
+```bash
+'/packages/hardhat/contracts'
+```
 
 # 🏄‍♂️ Quick Start
 

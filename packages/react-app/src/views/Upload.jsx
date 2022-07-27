@@ -24,6 +24,7 @@ import {arrayify} from "@ethersproject/bytes";
 import XLSX from 'xlsx';
 import { JsonToTable } from "react-json-to-table";
 import NFTDisplay from "../components/NFTDisplay";
+import Column from "antd/lib/table/Column";
 
 export default function Upload({
   address,
@@ -125,13 +126,13 @@ export default function Upload({
 
   return (
     <div>
-      <h1>Data upload</h1>
+      <h1>Create new carbon claims</h1>
       <Row align={'center'}>
         <Col align={'center'} span={12}>
           <div>
             <Card style={{borderRadius: '0.8rem', margin: 16}}>
               <h4>
-                Project developers can choose the appropriate methodology for their project and upload the relevant data behind their tons
+                You can create new claims in 3 simple steps
               </h4>
             </Card>
           </div>
@@ -162,25 +163,9 @@ export default function Upload({
           <div>
             <Card style={{borderRadius: '0.8rem', margin: 16}}>
               <div style={{ margin: 0 }}>
-                <Collapse onChange={handleTokenLoading} ghost>
-                  <Panel header="Carbon batch" key="1" >
-                    <Row>
-                      <h1>Select existing batch</h1>
-                    </Row>
-                    <Row>
-                      <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
-                        {newAddressTokens.map((tokenID) =>
-                          <Option key={tokenID.toNumber()} value={tokenID.toNumber()}>{tokenID.toNumber()}</Option>
-                        )}
-                      </Select>
-                    </Row>
-                    <Row>
-                      <h4>OR</h4>
-                    </Row>
-                    <Row>
-                      <h2>Create new batch</h2>
-                    </Row>
-                    <Row>
+                <Column align={'center'}>
+                  <h1>Create new claim</h1>
+                  <Row>
                       <Button onClick={async() => {
                         const result = tx(writeContracts.TonMinter.mintEmptyVCU())
                         result.then(async() => {
@@ -200,6 +185,21 @@ export default function Upload({
                       }}>
                         Create
                       </Button>
+                    </Row>
+
+                
+                </Column>
+                <Collapse onChange={handleTokenLoading} ghost>
+                  <Panel header="Select existing batch" key="1" >
+                    <Row>
+                      <h2>Select existing batch</h2>
+                    </Row>
+                    <Row>
+                      <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
+                        {newAddressTokens.map((tokenID) =>
+                          <Option key={tokenID.toNumber()} value={tokenID.toNumber()}>{tokenID.toNumber()}</Option>
+                        )}
+                      </Select>
                     </Row>
                     <Row>
                       <h4>Already created a batch? View actions <Link to={'/actions'}>here</Link></h4>

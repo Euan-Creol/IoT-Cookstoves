@@ -23,6 +23,8 @@ import {arrayify} from "@ethersproject/bytes";
 import XLSX from 'xlsx';
 import { JsonToTable } from "react-json-to-table";
 import NFTDisplay from "../components/NFTDisplay";
+import KLIMALogo from "../klima-logo.webp"
+import C3Logo from "../c3_logo.png"
 
 export default function Actions({
                                  address,
@@ -103,7 +105,7 @@ export default function Actions({
           <Collapse onChange={handleTokenLoading} ghost>
             <Panel header="Carbon batch" key="1" >
               <Row>
-                <h1>Select batch</h1>
+                <h1>Your carbon claims</h1>
               </Row>
               <Row>
                 <Select placeholder="Tokens" defaultValue="" style={{ width: 120 }} onChange={(e) => {handleChange(e)}} >
@@ -125,12 +127,31 @@ export default function Actions({
         </Col>
       </Row>
       {newTokenData !== null &&
-      <Row align={'center'}>
-        <Col align={'center'} span={12}>
-          <div>
+        <div>
+          <Row align={'center'}>
+            <Col align={'center'} span={12}>
+              <div>
+                <Card style={{borderRadius: '0.8rem', margin: 16}}>
+                  <div style={{margin: 8}}>
+                    <Row>
+                      <Col span={4}>
+                        <img style={{maxWidth:'100%'}} src={C3Logo} alt={"C3 Logo"}/>
+                      </Col>
+                      <Col span={16}>
+                        <h2>Fractionalize with C3</h2>
+                      </Col>
+                    </Row>
+                  </div>
+                </Card>
+              </div>
+            </Col>
+          </Row>
+          <Row align={'center'}>
+            <Col align={'center'} span={12}>
+              <div>
+                {/*
             <Card style={{borderRadius: '0.8rem', margin: 16}}>
               <div style={{margin: 8}}>
-          <Divider/>
           <Row>
             <Col span={22}>
               <h2>Set Token URI</h2>
@@ -166,9 +187,23 @@ export default function Actions({
           </Row>
       </div>
             </Card>
-          </div>
-        </Col>
-      </Row>
+            */}
+                <Card style={{borderRadius: '0.8rem', margin: 16}}>
+                  <div style={{margin: 8}}>
+                    <Row>
+                      <Col span={4}>
+                        <img style={{maxWidth:'100%'}} src={KLIMALogo} alt={"KLIMA Logo"}/>
+                      </Col>
+                      <Col span={16}>
+                        <h2>Bond for KLIMA</h2>
+                      </Col>
+                    </Row>
+                  </div>
+                </Card>
+              </div>
+            </Col>
+          </Row>
+        </div>
       }
     </div>
   )

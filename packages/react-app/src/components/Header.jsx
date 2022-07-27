@@ -1,14 +1,17 @@
 import { PageHeader } from "antd";
 import React from "react";
+import {Link} from "react-router-dom";
 
 // displays a page header
 
 export default function Header() {
   return (
+    <Link to={'/'}>
       <PageHeader
         title="Prototype Verifier App"
-        subTitle="Allows a trusted third party to upload and verify stove data"
+        subTitle=""
         style={{ cursor: "pointer" }}
       />
+    </Link>
   );
 }

@@ -23641,3 +23641,6 @@ div.ant-typography-edit-content.ant-typography-rtl {
 .highlight {
   background-color: #f9f9f9;
 }
+.ant-card-body {
+  line-height: 1.1;
+}
